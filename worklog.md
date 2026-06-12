@@ -137,3 +137,26 @@ Stage Summary:
 - English language support added throughout the BMC tool
 - All calculation algorithms preserved exactly as they were
 - Font remains TAJAWAL as requested
+---
+Task ID: fix-bmc-sidebar-and-page-de-garde
+Agent: main
+Task: Fix BMC tool sidebar not appearing and remove "Page de garde" alert
+
+Work Log:
+- Analyzed user screenshot showing sidebar missing and Page de garde alert present
+- Removed "Page de garde" alert div from HTML body (line 303) and ALERT_TRANSLATIONS array (line 626)
+- Discovered the real root cause: JavaScript had multiple syntax errors preventing the script from executing
+- Fixed `function initTabs;` (incomplete function declaration) → removed the orphan line
+- Fixed French apostrophes in single-quoted strings (d'Étude, l'entreprise, d'affaires, etc.) by converting to backtick template literals
+- Fixed missing closing brace in `translateButtonsSmall` function (ended with `})` instead of `})}`)
+- Verified all three fixes with Node.js syntax checker and browser testing
+- Confirmed sidebar now shows 8 steps in all languages (ar/fr/en)
+- Confirmed "Page de garde" alert is completely removed
+- Build passes successfully
+
+Stage Summary:
+- Root cause: Multiple JavaScript syntax errors were preventing the entire BMC tool script from executing
+- Key fixes: (1) Removed orphan `function initTabs;` line, (2) Escaped French apostrophes in I18N strings, (3) Added missing closing brace to translateButtonsSmall
+- Sidebar with step navigation now appears correctly in embedded mode
+- Page de garde alert successfully removed from both HTML and translations array
+- Tajawal font is already the primary font (--ui-font) in the BMC tool
