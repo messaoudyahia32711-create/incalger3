@@ -977,45 +977,7 @@ function StudentDashboard({ locale, user, onNavigate }: { locale: Locale; user: 
 
           {/* ========== PROJECT STUDY TAB — BMC Financial Tool ========== */}
           {studentTab === 'bmc' && (
-            <div className="space-y-0">
-              {/* Elegant header banner */}
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="rounded-2xl overflow-hidden shadow-lg border border-[#C8A951]/20"
-                style={{ background: 'linear-gradient(135deg, #0D1B2A 0%, #1B3A6B 50%, #0F2140 100%)' }}
-              >
-                <div className="px-6 py-5 flex flex-wrap items-center justify-between gap-4">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-[#C8A951]/20 flex items-center justify-center">
-                      <Target className="w-6 h-6 text-[#E4C97A]" />
-                    </div>
-                    <div>
-                      <h2 className="text-xl font-black text-white" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'student.bmc')}</h2>
-                      <p className="text-[#E4C97A] text-xs font-bold">{t(locale, 'student.bmcToolDesc')}</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-2 items-center">
-                    <span className="px-3 py-1.5 rounded-full text-xs font-bold bg-[#C8A951]/15 text-[#E4C97A] border border-[#C8A951]/30">INC ALG 3</span>
-                    <span className="px-3 py-1.5 rounded-full text-xs font-bold bg-[#2E7D32]/15 text-green-300 border border-[#2E7D32]/30">{locale === 'ar' ? 'القرار 1275' : 'Decision 1275'}</span>
-                    <a href="/bmc-tool/index.html" target="_blank" rel="noopener noreferrer" className="px-4 py-2 rounded-xl bg-[#C8A951] text-[#0D1B2A] font-bold text-xs flex items-center gap-2 hover:bg-[#E4C97A] shadow-md transition-all">
-                      <ExternalLink className="w-3.5 h-3.5" />{locale === 'ar' ? 'فتح في نافذة جديدة' : 'Open in new tab'}
-                    </a>
-                  </div>
-                </div>
-              </motion.div>
-
-              {/* Full BMC Tool — direct iframe embed */}
-              <div className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden mt-4" style={{ borderTop: '3px solid #C8A951' }}>
-                <iframe
-                  src="/bmc-tool/index.html"
-                  className="w-full border-0"
-                  style={{ height: 'calc(100vh - 200px)', minHeight: '800px' }}
-                  title="INC ALG 3 — Financial Study Tool"
-                  sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
-                />
-              </div>
-            </div>
+            <BMCToolEmbed locale={locale} />
           )}
 
           {/* ========== MESSAGES TAB ========== */}
