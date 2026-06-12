@@ -1,0 +1,402 @@
+   900→    }
+   901→    const profile = { name: editName, email: editEmail, phone: editPhone, faculty: editFaculty, level: editLevel, password: newPassword };
+   902→    setStudentProfile(user?.id || '', profile);
+   903→    setCurrentPassword('');
+   904→    setNewPassword('');
+   905→    setConfirmPassword('');
+   906→    toast.success(t(locale, 'student.passwordChanged'));
+   907→  };
+   908→
+   909→  const unreadMsgs = messages.filter((m: Message) => m.to === user?.id && !m.read).length;
+   910→
+   911→  const tabs = [
+   912→    { key: 'overview', label: t(locale, 'student.overview'), icon: HomeIcon },
+   913→    { key: 'my-project', label: t(locale, 'student.myProject'), icon: FileText },
+   914→    { key: 'bmc', label: t(locale, 'student.bmc'), icon: Target },
+   915→    { key: 'messages', label: t(locale, 'student.messages'), icon: MessageCircle, badge: unreadMsgs },
+   916→    { key: 'guide', label: t(locale, 'student.guide'), icon: BookOpen },
+   917→    { key: 'profile', label: t(locale, 'student.profile'), icon: Users },
+   918→    { key: 'settings', label: t(locale, 'student.settings'), icon: Settings },
+   919→  ];
+   920→
+   921→  const stepIcons = [Lightbulb, ClipboardCheck, GraduationCap, Check, Rocket];
+   922→  const stepColors = ['#C8A951', '#1B3A6B', '#2E7D32', '#27AE60', '#C8A951'];
+   923→
+   924→  return (
+   925→    <div className="min-h-screen bg-[#F5F7FA] flex" style={{ direction: dir }}>
+   926→      <Sidebar items={tabs} activeTab={studentTab} onTabChange={setStudentTab} collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} locale={locale} />
+   927→      <div className="flex-1 flex flex-col min-w-0">
+   928→        {/* Header */}
+   929→        <div className="bg-gradient-to-r from-[#1B3A6B] to-[#2952A3] py-5 px-6">
+   930→          <div className="flex items-center gap-4">
+   931→            <div className="w-12 h-12 rounded-xl bg-[#C8A951] flex items-center justify-center text-[#0D1B2A] font-black text-lg" style={{ fontFamily: 'var(--font-cairo)' }}>{user?.name?.charAt(0) || 'S'}</div>
+   932→            <div className="flex-1"><h1 className="text-xl font-black text-white" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'student.welcome')}، {user?.name}</h1><p className="text-[#E4C97A] text-xs">{user?.email}</p></div>
+   933→            {myProject && <StatusBadge status={myProject.status} locale={locale} />}
+   934→          </div>
+   935→        </div>
+   936→
+   937→        {/* Mobile tabs */}
+   938→        <div className="md:hidden flex gap-1 p-2 overflow-x-auto bg-white border-b border-slate-200">
+   939→          {tabs.map((tab) => (<button key={tab.key} onClick={() => setStudentTab(tab.key)} className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap ${studentTab === tab.key ? 'bg-[#1B3A6B] text-white' : 'text-slate-500'}`}><tab.icon className="w-3.5 h-3.5" />{tab.label}</button>))}
+   940→        </div>
+   941→
+   942→        {/* Content */}
+   943→        <div className="flex-1 p-4 sm:p-6 overflow-y-auto">
+   944→
+   945→          {/* ========== OVERVIEW TAB ========== */}
+   946→          {studentTab === 'overview' && (
+   947→            <div className="space-y-6">
+   948→              {/* Project Header Card */}
+   949→              <div className="bg-white rounded-2xl overflow-hidden shadow-md border border-slate-100">
+   950→                <div className="p-6" style={{ background: 'linear-gradient(135deg, #0D1B2A, #1B3A6B)' }}>
+   951→                  <div className="flex flex-wrap items-center gap-2 mb-3">
+   952→                    <FieldBadge field={myProject.field} locale={locale} />
+   953→                    <StatusBadge status={myProject.status} locale={locale} />
+   954→                    <span className="text-white/40 text-sm font-mono">{myProject.refNumber}</span>
+   955→                  </div>
+   956→                  <h2 className="text-2xl font-black text-white mb-1" style={{ fontFamily: 'var(--font-cairo)' }}>{locale === 'ar' ? myProject.projectName : myProject.projectNameEn}</h2>
+   957→                  <p className="text-white/50 text-sm">{myProject.tradeName} • {t(locale, `stages.${myProject.stage}`)}</p>
+   958→                </div>
+   959→
+   960→                {/* Progress Bar */}
+   961→                <div className="p-6">
+   962→                  <div className="flex items-center justify-between mb-3">
+   963→                    <span className="text-sm font-bold text-[#1B3A6B]">{t(locale, 'student.progressLabel')}</span>
+   964→                    <span className="text-sm font-black text-[#C8A951]">{progressPercent}%</span>
+   965→                  </div>
+   966→                  <div className="h-3 bg-slate-100 rounded-full overflow-hidden mb-6">
+   967→                    <motion.div initial={{ width: 0 }} animate={{ width: `${progressPercent}%` }} transition={{ duration: 1, ease: 'easeOut' }} className="h-full rounded-full" style={{ background: 'linear-gradient(90deg, #1B3A6B, #C8A951)' }} />
+   968→                  </div>
+   969→
+   970→                  {/* Step Progress Icons */}
+   971→                  <div className="flex items-center gap-2 mb-6">
+   972→                    {[0, 1, 2, 3, 4].map((step) => {
+   973→                      const Icon = stepIcons[step];
+   974→                      const isActive = step === currentStep;
+   975→                      const isDone = step < currentStep;
+   976→                      const isRejected = myProject.status === 'rejected';
+   977→                      return (
+   978→                        <div key={step} className="flex-1 flex flex-col items-center">
+   979→                          <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-1 transition-all ${isDone ? 'bg-[#27AE60] text-white' : isActive && !isRejected ? 'bg-[#C8A951] text-[#0D1B2A] animate-pulse-gold' : 'bg-slate-200 text-slate-400'}`}>
+   980→                            {isDone ? <Check className="w-5 h-5" /> : <Icon className="w-4 h-4" />}
+   981→                          </div>
+   982→                          <span className="text-[10px] text-center text-slate-500 font-medium">{t(locale, `student.stepGuide.step${step}.title`)}</span>
+   983→                        </div>
+   984→                      );
+   985→                    })}
+   986→                  </div>
+   987→
+   988→                  {/* Current Step Guide */}
+   989→                  {currentStep >= 0 && (
+   990→                    <div className="p-4 rounded-xl" style={{ backgroundColor: `${stepColors[currentStep]}08`, border: `1px solid ${stepColors[currentStep]}20` }}>
+   991→                      <div className="flex items-start gap-3">
+   992→                        <Info className="w-5 h-5 shrink-0 mt-0.5" style={{ color: stepColors[currentStep] }} />
+   993→                        <div>
+   994→                          <h4 className="font-bold text-sm mb-1" style={{ color: stepColors[currentStep] }}>{t(locale, `student.stepGuide.step${currentStep}.title`)}</h4>
+   995→                          <p className="text-sm text-slate-600">{t(locale, `student.stepGuide.step${currentStep}.desc`)}</p>
+   996→                        </div>
+   997→                      </div>
+   998→                    </div>
+   999→                  )}
+  1000→                  {myProject.status === 'rejected' && (
+  1001→                    <div className="p-4 rounded-xl bg-red-50 border border-red-200">
+  1002→                      <div className="flex items-start gap-3">
+  1003→                        <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+  1004→                        <div>
+  1005→                          <h4 className="font-bold text-sm text-red-700 mb-1">{t(locale, 'status.rejected')}</h4>
+  1006→                          <p className="text-sm text-red-600">{myProject.evaluationNotes || (locale === 'ar' ? 'يمكنك التواصل مع الإدارة لمزيد من المعلومات' : 'You can contact the admin for more information')}</p>
+  1007→                        </div>
+  1008→                      </div>
+  1009→                    </div>
+  1010→                  )}
+  1011→                </div>
+  1012→              </div>
+  1013→
+  1014→              {/* Project Info & Financial Grid */}
+  1015→              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  1016→                {/* Project Information */}
+  1017→                <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100">
+  1018→                  <h3 className="text-lg font-bold text-[#1B3A6B] mb-4 flex items-center gap-2" style={{ fontFamily: 'var(--font-cairo)' }}><FileText className="w-5 h-5" />{t(locale, 'student.projectInfo')}</h3>
+  1019→                  <div className="space-y-4">
+  1020→                    <div>
+  1021→                      <span className="text-xs text-slate-400 font-bold">{t(locale, 'projectDetail.overview')}</span>
+  1022→                      <p className="text-sm text-slate-700 mt-1 leading-relaxed">{myProject.description}</p>
+  1023→                    </div>
+  1024→                    <div className="grid grid-cols-1 gap-3">
+  1025→                      {[
+  1026→                        { label: t(locale, 'projectSubmit.problem'), value: myProject.problem },
+  1027→                        { label: t(locale, 'projectSubmit.targetAudience'), value: myProject.targetAudience },
+  1028→                        { label: t(locale, 'projectSubmit.addedValue'), value: myProject.addedValue },
+  1029→                      ].map((item, i) => (
+  1030→                        <div key={i}>
+  1031→                          <span className="text-xs text-slate-400">{item.label}</span>
+  1032→                          <p className="text-sm text-slate-700 font-medium">{item.value}</p>
+  1033→                        </div>
+  1034→                      ))}
+  1035→                    </div>
+  1036→                  </div>
+  1037→                </div>
+  1038→
+  1039→                {/* Financial + Evaluation */}
+  1040→                <div className="space-y-6">
+  1041→                  <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100">
+  1042→                    <h3 className="text-lg font-bold text-[#1B3A6B] mb-4 flex items-center gap-2" style={{ fontFamily: 'var(--font-cairo)' }}><Banknote className="w-5 h-5" />{t(locale, 'student.financialInfo')}</h3>
+  1043→                    <div className="space-y-3">
+  1044→                      {[
+  1045→                        { label: t(locale, 'projectSubmit.fundingRequired'), value: `${myProject.fundingRequired.toLocaleString()} د.ج`, bold: true, color: '#1B3A6B' },
+  1046→                        { label: t(locale, 'projectSubmit.stage'), value: t(locale, `stages.${myProject.stage}`) },
+  1047→                        { label: t(locale, 'projectSubmit.hasPartner'), value: myProject.hasPartner ? (locale === 'ar' ? 'نعم' : 'Yes') : (locale === 'ar' ? 'لا' : 'No') },
+  1048→                        { label: t(locale, 'projectSubmit.teamSize'), value: String(myProject.teamSize) },
+  1049→                        { label: t(locale, 'projectSubmit.legalFramework'), value: myProject.legalFramework },
+  1050→                        { label: t(locale, 'projectSubmit.tradeName'), value: myProject.tradeName },
+  1051→                      ].map((item, i) => (
+  1052→                        <div key={i} className="flex justify-between items-center py-2 border-b border-slate-50 last:border-0">
+  1053→                          <span className="text-sm text-slate-500">{item.label}</span>
+  1054→                          <span className={`text-sm font-bold ${item.bold ? 'text-lg' : ''}`} style={{ color: item.color || '#1B3A6B' }}>{item.value}</span>
+  1055→                        </div>
+  1056→                      ))}
+  1057→                    </div>
+  1058→                  </div>
+  1059→
+  1060→                  <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100">
+  1061→                    <h3 className="text-lg font-bold text-[#1B3A6B] mb-4 flex items-center gap-2" style={{ fontFamily: 'var(--font-cairo)' }}><Award className="w-5 h-5" />{t(locale, 'student.evaluationInfo')}</h3>
+  1062→                    <div className="space-y-3">
+  1063→                      <div className="flex justify-between items-center">
+  1064→                        <span className="text-sm text-slate-500">{t(locale, 'student.scoreLabel')}</span>
+  1065→                        <span className={`text-2xl font-black ${myProject.score ? (myProject.score >= 80 ? 'text-green-600' : myProject.score >= 60 ? 'text-amber-600' : 'text-red-600') : 'text-slate-400'}`} style={{ fontFamily: 'var(--font-cairo)' }}>
+  1066→                          {myProject.score ? `${myProject.score}/100` : t(locale, 'projectDetail.noScore')}
+  1067→                        </span>
+  1068→                      </div>
+  1069→                      {myProject.score && (
+  1070→                        <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
+  1071→                          <motion.div initial={{ width: 0 }} animate={{ width: `${myProject.score}%` }} transition={{ duration: 0.8 }} className="h-full rounded-full" style={{ backgroundColor: myProject.score >= 80 ? '#27AE60' : myProject.score >= 60 ? '#F39C12' : '#E74C3C' }} />
+  1072→                        </div>
+  1073→                      )}
+  1074→                      {myProject.evaluationNotes && (
+  1075→                        <div className="mt-3 p-3 rounded-xl bg-[#C8A951]/5 border border-[#C8A951]/20">
+  1076→                          <p className="text-xs font-bold text-[#1B3A6B] mb-1">{t(locale, 'student.adminNotes')}</p>
+  1077→                          <p className="text-sm text-slate-600">{myProject.evaluationNotes}</p>
+  1078→                        </div>
+  1079→                      )}
+  1080→                    </div>
+  1081→                  </div>
+  1082→                </div>
+  1083→              </div>
+  1084→
+  1085→              {/* Timeline */}
+  1086→              {myProject.timeline && myProject.timeline.length > 0 && (
+  1087→                <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100">
+  1088→                  <h3 className="text-lg font-bold text-[#1B3A6B] mb-4 flex items-center gap-2" style={{ fontFamily: 'var(--font-cairo)' }}><Clock className="w-5 h-5" />{t(locale, 'student.timelineInfo')}</h3>
+  1089→                  <div className="space-y-4">
+  1090→                    {myProject.timeline.map((event: any, i: number) => (
+  1091→                      <div key={i} className="flex items-start gap-4">
+  1092→                        <div className="flex flex-col items-center">
+  1093→                          <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${i === myProject.timeline.length - 1 ? 'bg-[#C8A951] text-[#0D1B2A]' : 'bg-[#27AE60] text-white'}`}>
+  1094→                            {i === myProject.timeline.length - 1 ? <CircleDot className="w-4 h-4" /> : <Check className="w-4 h-4" />}
+  1095→                          </div>
+  1096→                          {i < myProject.timeline.length - 1 && <div className="w-0.5 h-8 bg-slate-200 mt-1" />}
+  1097→                        </div>
+  1098→                        <div>
+  1099→                          <p className="text-sm font-bold text-[#1B3A6B]">{locale === 'ar' ? event.event : event.eventEn}</p>
+  1100→                          <p className="text-xs text-slate-400">{new Date(event.date).toLocaleDateString(locale === 'ar' ? 'ar-DZ' : locale === 'fr' ? 'fr-FR' : 'en', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+  1101→                        </div>
+  1102→                      </div>
+  1103→                    ))}
+  1104→                  </div>
+  1105→                </div>
+  1106→              )}
+  1107→
+  1108→              {/* Quick Stats */}
+  1109→              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+  1110→                {[
+  1111→                  { label: t(locale, 'stats.accepted'), value: editableStats.accepted, icon: Check, color: '#27AE60' },
+  1112→                  { label: t(locale, 'stats.evaluating'), value: editableStats.evaluating, icon: ClipboardCheck, color: '#F39C12' },
+  1113→                  { label: t(locale, 'stats.startups'), value: editableStats.startups, icon: Rocket, color: '#C8A951' },
+  1114→                  { label: t(locale, 'stats.batches'), value: editableStats.trainedBatches, icon: GraduationCap, color: '#1B3A6B' },
+  1115→                ].map((stat, i) => (
+  1116→                  <div key={i} className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 text-center">
+  1117→                    <stat.icon className="w-5 h-5 mx-auto mb-2" style={{ color: stat.color }} />
+  1118→                    <div className="text-xl font-black" style={{ fontFamily: 'var(--font-cairo)', color: stat.color }}>{stat.value}</div>
+  1119→                    <div className="text-xs text-slate-500">{stat.label}</div>
+  1120→                  </div>
+  1121→                ))}
+  1122→              </div>
+  1123→            </div>
+  1124→          )}
+  1125→
+  1126→          {/* ========== MY PROJECT TAB ========== */}
+  1127→          {studentTab === 'my-project' && (
+  1128→            <div className="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden">
+  1129→              {/* Header */}
+  1130→              <div className="p-6" style={{ background: 'linear-gradient(135deg, #0D1B2A, #1B3A6B)' }}>
+  1131→                <div className="flex items-center justify-between mb-2">
+  1132→                  <div className="flex items-center gap-2">
+  1133→                    <FieldBadge field={isEditingProject ? editField : myProject.field} locale={locale} />
+  1134→                    <StatusBadge status={myProject.status} locale={locale} />
+  1135→                    {isEditingProject && <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-[#C8A951]/20 text-[#C8A951] border border-[#C8A951]/30">{t(locale, 'student.editMode')}</span>}
+  1136→                  </div>
+  1137→                  <div className="flex gap-2">
+  1138→                    {!isEditingProject ? (
+  1139→                      <button onClick={() => setIsEditingProject(true)} className="px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all" style={{ backgroundColor: '#C8A951', color: '#0D1B2A' }}>
+  1140→                        <Edit className="w-4 h-4" />{t(locale, 'student.editProject')}
+  1141→                      </button>
+  1142→                    ) : (
+  1143→                      <>
+  1144→                        <button onClick={handleSaveProject} className="px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 bg-[#1B3A6B] text-white hover:bg-[#2952A3] transition-all">
+  1145→                          <Check className="w-4 h-4" />{t(locale, 'student.saveProject')}
+  1146→                        </button>
+  1147→                        <button onClick={() => { setIsEditingProject(false); }} className="px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 bg-white/10 text-white hover:bg-white/20 transition-all border border-white/20">
+  1148→                          <X className="w-4 h-4" />{t(locale, 'student.cancelEdit')}
+  1149→                        </button>
+  1150→                      </>
+  1151→                    )}
+  1152→                  </div>
+  1153→                </div>
+  1154→                <h2 className="text-2xl font-black text-white" style={{ fontFamily: 'var(--font-cairo)' }}>
+  1155→                  {isEditingProject ? (editProjectName || t(locale, 'student.editProject')) : (locale === 'ar' ? myProject.projectName : myProject.projectNameEn) || t(locale, 'student.editProject')}
+  1156→                </h2>
+  1157→                <p className="text-white/60 text-sm">{myProject.refNumber} • {myProject.tradeName || '—'}</p>
+  1158→              </div>
+  1159→
+  1160→              {/* Content */}
+  1161→              <div className="p-6 space-y-6">
+  1162→                {!isEditingProject ? (
+  1163→                  /* ===== VIEW MODE ===== */
+  1164→                  <>
+  1165→                    <div>
+  1166→                      <h4 className="font-bold text-[#1B3A6B] mb-2">{t(locale, 'projectDetail.overview')}</h4>
+  1167→                      <p className="text-slate-600">{myProject.description || '—'}</p>
+  1168→                    </div>
+  1169→                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+  1170→                      <div className="space-y-3">
+  1171→                        <div><span className="text-xs text-slate-400">{t(locale, 'projectSubmit.problem')}</span><p className="text-sm font-medium text-slate-700">{myProject.problem || '—'}</p></div>
+  1172→                        <div><span className="text-xs text-slate-400">{t(locale, 'projectSubmit.targetAudience')}</span><p className="text-sm font-medium text-slate-700">{myProject.targetAudience || '—'}</p></div>
+  1173→                        <div><span className="text-xs text-slate-400">{t(locale, 'projectSubmit.addedValue')}</span><p className="text-sm font-medium text-slate-700">{myProject.addedValue || '—'}</p></div>
+  1174→                      </div>
+  1175→                      <div className="bg-[#F5F7FA] rounded-xl p-4 space-y-2">
+  1176→                        {[
+  1177→                          [t(locale, 'projectSubmit.fundingRequired'), `${(myProject.fundingRequired || 0).toLocaleString()} د.ج`],
+  1178→                          [t(locale, 'student.stage'), t(locale, `stages.${myProject.stage}`)],
+  1179→                          [t(locale, 'student.teamSize'), String(myProject.teamSize)],
+  1180→                          [t(locale, 'student.hasPartner'), myProject.hasPartner ? (locale === 'ar' ? 'نعم' : 'Yes') : (locale === 'ar' ? 'لا' : 'No')],
+  1181→                          [t(locale, 'student.legalFramework'), myProject.legalFramework || '—'],
+  1182→                          [t(locale, 'student.tradeName'), myProject.tradeName || '—'],
+  1183→                          [t(locale, 'student.academicYear'), myProject.academicYear || '—'],
+  1184→                          [t(locale, 'student.department'), myProject.department || '—'],
+  1185→                          [t(locale, 'admin.score'), myProject.score ? `${myProject.score}/100` : '—'],
+  1186→                        ].map(([label, value], i) => (
+  1187→                          <div key={i} className="flex justify-between"><span className="text-xs text-slate-500">{label}</span><span className="text-xs font-bold text-[#1B3A6B]">{value}</span></div>
+  1188→                        ))}
+  1189→                      </div>
+  1190→                    </div>
+  1191→                    {myProject.evaluationNotes && <div className="p-4 rounded-xl bg-[#C8A951]/5 border border-[#C8A951]/20"><p className="text-sm font-bold text-[#1B3A6B] mb-1">{t(locale, 'admin.notes')}</p><p className="text-sm text-slate-600">{myProject.evaluationNotes}</p></div>}
+  1192→                  </>
+  1193→                ) : (
+  1194→                  /* ===== EDIT MODE ===== */
+  1195→                  <div className="space-y-6">
+  1196→                    {/* Project Names */}
+  1197→                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+  1198→                      <div>
+  1199→                        <label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'projectSubmit.projectName')} (AR)</label>
+  1200→                        <input value={editProjectName} onChange={(e) => setEditProjectName(e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm" placeholder={locale === 'ar' ? 'اسم المشروع بالعربية' : 'Project name in Arabic'} />
+  1201→                      </div>
+  1202→                      <div>
+  1203→                        <label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'projectSubmit.projectName')} (EN)</label>
+  1204→                        <input value={editProjectNameEn} onChange={(e) => setEditProjectNameEn(e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm" placeholder="Project name in English" />
+  1205→                      </div>
+  1206→                    </div>
+  1207→
+  1208→                    {/* Description */}
+  1209→                    <div>
+  1210→                      <label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'projectDetail.overview')}</label>
+  1211→                      <textarea value={editDescription} onChange={(e) => setEditDescription(e.target.value)} rows={3} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm resize-none" />
+  1212→                    </div>
+  1213→
+  1214→                    {/* Problem, Target, Value */}
+  1215→                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+  1216→                      <div>
+  1217→                        <label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'projectSubmit.problem')}</label>
+  1218→                        <textarea value={editProblem} onChange={(e) => setEditProblem(e.target.value)} rows={2} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm resize-none" />
+  1219→                      </div>
+  1220→                      <div>
+  1221→                        <label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'projectSubmit.targetAudience')}</label>
+  1222→                        <textarea value={editTargetAudience} onChange={(e) => setEditTargetAudience(e.target.value)} rows={2} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm resize-none" />
+  1223→                      </div>
+  1224→                      <div>
+  1225→                        <label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'projectSubmit.addedValue')}</label>
+  1226→                        <textarea value={editAddedValue} onChange={(e) => setEditAddedValue(e.target.value)} rows={2} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm resize-none" />
+  1227→                      </div>
+  1228→                    </div>
+  1229→
+  1230→                    {/* Field, Stage, Funding */}
+  1231→                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+  1232→                      <div>
+  1233→                        <label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'student.projectField')}</label>
+  1234→                        <select value={editField} onChange={(e) => setEditField(e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm bg-white">
+  1235→                          {(['ict', 'digital', 'energy', 'ecommerce', 'minerals', 'industry', 'health', 'education', 'agri', 'other'] as const).map((f) => (<option key={f} value={f}>{t(locale, `fields.${f}`)}</option>))}
+  1236→                        </select>
+  1237→                      </div>
+  1238→                      <div>
+  1239→                        <label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'student.stage')}</label>
+  1240→                        <select value={editStage} onChange={(e) => setEditStage(e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm bg-white">
+  1241→                          {(['idea', 'study', 'prototype', 'startup', 'growth'] as const).map((s) => (<option key={s} value={s}>{t(locale, `stages.${s}`)}</option>))}
+  1242→                        </select>
+  1243→                      </div>
+  1244→                      <div>
+  1245→                        <label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'projectSubmit.fundingRequired')} (د.ج)</label>
+  1246→                        <input type="number" value={editFundingRequired} onChange={(e) => setEditFundingRequired(Number(e.target.value))} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm" />
+  1247→                      </div>
+  1248→                    </div>
+  1249→
+  1250→                    {/* Team, Partner, Legal, Trade Name */}
+  1251→                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+  1252→                      <div>
+  1253→                        <label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'student.teamSize')}</label>
+  1254→                        <input type="number" min={1} max={20} value={editTeamSize} onChange={(e) => setEditTeamSize(Number(e.target.value))} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm" />
+  1255→                      </div>
+  1256→                      <div>
+  1257→                        <label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'student.hasPartner')}</label>
+  1258→                        <select value={editHasPartner ? 'yes' : 'no'} onChange={(e) => setEditHasPartner(e.target.value === 'yes')} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm bg-white">
+  1259→                          <option value="no">{locale === 'ar' ? 'لا' : 'No'}</option>
+  1260→                          <option value="yes">{locale === 'ar' ? 'نعم' : 'Yes'}</option>
+  1261→                        </select>
+  1262→                      </div>
+  1263→                      <div>
+  1264→                        <label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'student.legalFramework')}</label>
+  1265→                        <select value={editLegalFramework} onChange={(e) => setEditLegalFramework(e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm bg-white">
+  1266→                          <option value="مؤسسة مصغرة">مؤسسة مصغرة</option>
+  1267→                          <option value="شركة ذات مسؤولية محدودة">شركة ذات مسؤولية محدودة</option>
+  1268→                          <option value="مؤسسة فردية">مؤسسة فردية</option>
+  1269→                          <option value="شركة أشخاص">شركة أشخاص</option>
+  1270→                        </select>
+  1271→                      </div>
+  1272→                      <div>
+  1273→                        <label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'student.tradeName')}</label>
+  1274→                        <input value={editTradeName} onChange={(e) => setEditTradeName(e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm" />
+  1275→                      </div>
+  1276→                    </div>
+  1277→
+  1278→                    {/* Academic Year, Department, Phone */}
+  1279→                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+  1280→                      <div>
+  1281→                        <label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'student.academicYear')}</label>
+  1282→                        <select value={editAcademicYear} onChange={(e) => setEditAcademicYear(e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm bg-white">
+  1283→                          <option value="2024/2025">2024/2025</option>
+  1284→                          <option value="2025/2026">2025/2026</option>
+  1285→                          <option value="2026/2027">2026/2027</option>
+  1286→                        </select>
+  1287→                      </div>
+  1288→                      <div>
+  1289→                        <label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'student.department')}</label>
+  1290→                        <input value={editDepartment} onChange={(e) => setEditDepartment(e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm" />
+  1291→                      </div>
+  1292→                      <div>
+  1293→                        <label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'student.phoneLabel')}</label>
+  1294→                        <input value={editOwnerPhone} onChange={(e) => setEditOwnerPhone(e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm" placeholder="05XXXXXXXX" />
+  1295→                      </div>
+  1296→                    </div>
+  1297→
+  1298→                    {/* Read-only admin fields */}
+  1299→                    <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
+
+[showing lines 900-1299 of 1684; use offset=1300 with limit to continue reading]

@@ -13,9 +13,9 @@ import {
   Facebook, Instagram, Youtube, Send, RefreshCw, MessageCircle,
   BookOpen, Info, ArrowLeft, PanelLeftClose, PanelLeftOpen,
   Clock, DollarSign, UsersRound, HandshakeIcon, Briefcase,
-  CircleDot, CircleCheck, CircleAlert, CircleX, Circle
+  CircleDot, CircleCheck, CircleAlert, CircleX, Circle, Bell
 } from 'lucide-react';
-import { useAppStore, type AppView, type Message, type BMCBlock, type EditableStats } from '@/lib/store';
+import { useAppStore, type AppView, type Message, type BMCBlock, type EditableStats, type StudentProject } from '@/lib/store';
 import { t, type Locale, localeNames, localeDirection } from '@/lib/i18n';
 import { MOCK_PROJECTS, MOCK_PARTNERS, MOCK_EVENTS, MOCK_MESSAGES, ADMIN_CREDENTIALS, STUDENT_CREDENTIALS, DEFAULT_BMC } from '@/lib/mockData';
 import { toast } from 'sonner';
@@ -156,20 +156,67 @@ function Sidebar({ items, activeTab, onTabChange, collapsed, onToggle, locale }:
 // ==================== LANDING PAGE ====================
 
 function LandingPage({ locale, onNavigate }: { locale: Locale; onNavigate: (v: AppView) => void }) {
-  const { editableStats } = useAppStore();
+  const { editableStats, adminSettings } = useAppStore();
   const dir = localeDirection[locale];
+  const [heroImgIdx, setHeroImgIdx] = useState(0);
+  const heroImages = adminSettings.heroImages.length > 0 ? adminSettings.heroImages : ['/images/hero-bg.png', '/images/cta-bg.png', '/images/about-section.png'];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setHeroImgIdx((prev) => (prev + 1) % heroImages.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [heroImages.length]);
+
+  const [typedText, setTypedText] = useState('');
+  const fullSubtitle = t(locale, 'hero.subtitle');
+  useEffect(() => {
+    let i = 0;
+    setTypedText('');
+    const timer = setInterval(() => {
+      if (i < fullSubtitle.length) {
+        setTypedText(fullSubtitle.substring(0, i + 1));
+        i++;
+      } else {
+        clearInterval(timer);
+      }
+    }, 40);
+    return () => clearInterval(timer);
+  }, [locale, fullSubtitle]);
+
   return (
     <div style={{ direction: dir }}>
       {/* Hero */}
-      <section className="relative min-h-[80vh] flex items-center overflow-hidden" style={{ background: 'linear-gradient(135deg, #0D1B2A 0%, #1B3A6B 50%, #0F2140 100%)' }}>
+      <section className="relative min-h-[85vh] flex items-center overflow-hidden" style={{ background: 'linear-gradient(135deg, #0D1B2A 0%, #1B3A6B 50%, #0F2140 100%)' }}>
         <div className="absolute inset-0 opacity-10"><svg width="100%" height="100%"><defs><pattern id="dots" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.5" fill="#C8A951"/></pattern></defs><rect width="100%" height="100%" fill="url(#dots)"/></svg></div>
+        
+        <AnimatePresence mode="wait">
+          <motion.div key={heroImgIdx} initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 0.15, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 1.5 }} className="absolute inset-0">
+            <img src={heroImages[heroImgIdx]} alt="" className="w-full h-full object-cover" />
+          </motion.div>
+        </AnimatePresence>
+        
+        <motion.div animate={{ y: [0, -20, 0], rotate: [0, 5, 0] }} transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }} className="absolute top-20 start-10 w-20 h-20 border-2 border-[#C8A951]/20 rounded-2xl" />
+        <motion.div animate={{ y: [0, 15, 0], rotate: [0, -3, 0] }} transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }} className="absolute top-40 end-20 w-16 h-16 border-2 border-[#2952A3]/30 rounded-full" />
+        <motion.div animate={{ y: [0, -25, 0], x: [0, 10, 0] }} transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }} className="absolute bottom-40 start-20 w-12 h-12 bg-[#C8A951]/10 rounded-xl rotate-45" />
+        <motion.div animate={{ y: [0, 20, 0] }} transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }} className="absolute top-1/3 end-10 w-6 h-6 bg-[#E4C97A]/20 rounded-full" />
+        
         <div className="absolute top-20 start-20 w-72 h-72 bg-[#C8A951]/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 end-20 w-96 h-96 bg-[#2952A3]/20 rounded-full blur-3xl" />
+        <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 4, repeat: Infinity }} className="absolute bottom-20 end-20 w-96 h-96 bg-[#2952A3]/20 rounded-full blur-3xl" />
+        
+        <div className="absolute bottom-24 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+          {heroImages.map((_, i) => (
+            <button key={i} onClick={() => setHeroImgIdx(i)} className={`w-2 h-2 rounded-full transition-all \${i === heroImgIdx ? 'bg-[#C8A951] w-6' : 'bg-white/30 hover:bg-white/50'}`} />
+          ))}
+        </div>
+        
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-20">
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} className="text-center">
             <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.2 }} className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#C8A951]/10 border border-[#C8A951]/20 text-[#E4C97A] text-sm mb-8"><Sparkles className="w-4 h-4" />{t(locale, 'brandFull')}</motion.div>
             <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="text-6xl sm:text-7xl md:text-8xl font-black text-white mb-4" style={{ fontFamily: 'var(--font-cairo)' }}>INC <span className="text-[#C8A951]">ALG 3</span></motion.h1>
-            <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="text-xl sm:text-2xl text-[#E4C97A] font-bold mb-6" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'hero.subtitle')}</motion.p>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className="min-h-[2rem] mb-6">
+              <p className="text-xl sm:text-2xl text-[#E4C97A] font-bold" style={{ fontFamily: 'var(--font-cairo)' }}>{typedText}<span className="animate-pulse">|</span></p>
+            </motion.div>
             <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="text-lg text-white/70 max-w-2xl mx-auto mb-10">{t(locale, 'hero.description')}</motion.p>
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} className="flex flex-wrap gap-4 justify-center">
               <button onClick={() => onNavigate('submit-project')} className="group px-8 py-4 rounded-2xl bg-[#C8A951] text-[#0D1B2A] font-bold text-lg hover:bg-[#E4C97A] transition-all shadow-xl shadow-[#C8A951]/25 flex items-center gap-3 animate-pulse-gold"><Rocket className="w-5 h-5" />{t(locale, 'hero.cta1')}<ArrowRight className="w-5 h-5 group-hover:translate-x-1 rtl-flip transition-transform" /></button>
@@ -180,7 +227,7 @@ function LandingPage({ locale, onNavigate }: { locale: Locale; onNavigate: (v: A
         <div className="absolute bottom-0 w-full"><svg viewBox="0 0 1440 100" fill="none"><path d="M0,60 C360,100 720,20 1440,60 L1440,100 L0,100 Z" fill="#F5F7FA"/></svg></div>
       </section>
 
-      {/* Stats - Uses editableStats from store */}
+      {/* Stats */}
       <section className="py-16 bg-[#F5F7FA]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
@@ -190,7 +237,7 @@ function LandingPage({ locale, onNavigate }: { locale: Locale; onNavigate: (v: A
               { value: editableStats.evaluating, label: t(locale, 'stats.evaluating'), icon: ClipboardCheck, color: '#F39C12' },
               { value: editableStats.startups, label: t(locale, 'stats.startups'), icon: Rocket, color: '#C8A951' },
             ].map((stat, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} viewport={{ once: true }} className="bg-white rounded-2xl p-6 shadow-md hover:shadow-xl transition-all border border-slate-100 text-center group">
+              <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} viewport={{ once: true }} className="bg-white rounded-2xl p-6 shadow-md hover:shadow-xl transition-all border border-slate-100 text-center group hover:-translate-y-1">
                 <div className="w-14 h-14 rounded-2xl mx-auto mb-3 flex items-center justify-center" style={{ backgroundColor: `${stat.color}15` }}><stat.icon className="w-7 h-7" style={{ color: stat.color }} /></div>
                 <div className="text-3xl font-black mb-1" style={{ fontFamily: 'var(--font-cairo)', color: stat.color }}><AnimatedCounter target={stat.value} /></div>
                 <div className="text-sm text-slate-600">{stat.label}</div>
@@ -228,7 +275,7 @@ function LandingPage({ locale, onNavigate }: { locale: Locale; onNavigate: (v: A
         </div>
       </section>
 
-      {/* Services */}
+      {/* Services with images */}
       <section className="py-20 bg-[#F5F7FA]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="text-center mb-14">
@@ -239,11 +286,18 @@ function LandingPage({ locale, onNavigate }: { locale: Locale; onNavigate: (v: A
             {(['s1', 's2', 's3', 's4', 's5', 's6'] as const).map((s, i) => {
               const icons = [GraduationCap, Target, Zap, Award, Banknote, Shield];
               const colors = ['#1B3A6B', '#2E7D32', '#C8A951', '#2952A3', '#E67E22', '#C0392B'];
+              const images = ['/images/service-training.png', '/images/service-prototype.png', '/images/service-funding.png', '/images/service-training.png', '/images/service-funding.png', '/images/service-prototype.png'];
               return (
-                <motion.div key={s} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} viewport={{ once: true }} className="bg-white rounded-2xl p-6 shadow-md hover:shadow-xl transition-all border border-slate-100 group hover:-translate-y-1">
-                  <div className="w-14 h-14 rounded-2xl mb-4 flex items-center justify-center group-hover:scale-110 transition-transform" style={{ backgroundColor: `${colors[i]}12` }}>{React.createElement(icons[i], { className: 'w-7 h-7', style: { color: colors[i] } })}</div>
-                  <h3 className="text-lg font-bold text-[#1B3A6B] mb-2" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, `services.${s}.title`)}</h3>
-                  <p className="text-sm text-slate-500">{t(locale, `services.${s}.desc`)}</p>
+                <motion.div key={s} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} viewport={{ once: true }} whileHover={{ y: -8, rotateX: 2 }} className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all border border-slate-100 group">
+                  <div className="h-40 overflow-hidden relative">
+                    <motion.img src={images[i]} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent" />
+                  </div>
+                  <div className="p-6">
+                    <div className="w-12 h-12 rounded-2xl mb-3 flex items-center justify-center -mt-12 relative z-10 shadow-md" style={{ backgroundColor: `${colors[i]}12` }}>{React.createElement(icons[i], { className: 'w-6 h-6', style: { color: colors[i] } })}</div>
+                    <h3 className="text-lg font-bold text-[#1B3A6B] mb-2" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, `services.${s}.title`)}</h3>
+                    <p className="text-sm text-slate-500">{t(locale, `services.${s}.desc`)}</p>
+                  </div>
                 </motion.div>
               );
             })}
@@ -251,19 +305,23 @@ function LandingPage({ locale, onNavigate }: { locale: Locale; onNavigate: (v: A
         </div>
       </section>
 
-      {/* About */}
+      {/* About with image */}
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
+            <motion.div initial={{ opacity: 0, x: locale === 'ar' ? 30 : -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
               <h2 className="text-4xl font-black text-[#1B3A6B] mb-3" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'about.title')}</h2>
               <p className="text-[#C8A951] font-bold text-lg mb-6">{t(locale, 'about.subtitle')}</p>
               <div className="space-y-4 text-slate-600 leading-relaxed"><p>{t(locale, 'about.p1')}</p><p>{t(locale, 'about.p2')}</p><p>{t(locale, 'about.p3')}</p></div>
               <div className="mt-6 space-y-2">{[{ icon: Users, text: t(locale, 'about.director') }, { icon: Building2, text: t(locale, 'about.established') }, { icon: Award, text: t(locale, 'about.official') }].map((item, i) => (<div key={i} className="flex items-center gap-3 text-slate-700"><item.icon className="w-5 h-5 text-[#C8A951]" /><span className="font-medium">{item.text}</span></div>))}</div>
             </motion.div>
-            <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="bg-gradient-to-br from-[#1B3A6B] to-[#0F2140] rounded-3xl p-8 text-white">
-              <div className="text-center mb-6"><div className="w-20 h-20 rounded-2xl mx-auto mb-4 bg-[#C8A951]/20 flex items-center justify-center"><Building2 className="w-10 h-10 text-[#C8A951]" /></div><h3 className="text-2xl font-black" style={{ fontFamily: 'var(--font-cairo)' }}>INC ALG 3</h3></div>
-              <div className="grid grid-cols-2 gap-4">{[{ value: '50,000+', label: locale === 'ar' ? 'طالب' : 'Students' }, { value: '4', label: locale === 'ar' ? 'كليات' : 'Faculties' }, { value: '11+', label: locale === 'ar' ? 'دفعات' : 'Batches' }, { value: '1,800+', label: locale === 'ar' ? 'مشروع' : 'Projects' }].map((item, i) => (<div key={i} className="bg-white/5 rounded-xl p-4 text-center"><div className="text-2xl font-black text-[#E4C97A]" style={{ fontFamily: 'var(--font-cairo)' }}>{item.value}</div><div className="text-sm text-white/70">{item.label}</div></div>))}</div>
+            <motion.div initial={{ opacity: 0, x: locale === 'ar' ? -30 : 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="relative rounded-3xl overflow-hidden shadow-2xl">
+              <img src="/images/about-incubator.png" alt="INC ALG 3 Incubator" className="w-full h-[400px] object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0D1B2A]/80 via-transparent to-transparent" />
+              <div className="absolute bottom-0 p-8 text-white">
+                <div className="flex items-center gap-3 mb-4"><div className="w-12 h-12 rounded-xl bg-[#C8A951]/20 flex items-center justify-center"><Building2 className="w-6 h-6 text-[#C8A951]" /></div><h3 className="text-2xl font-black" style={{ fontFamily: 'var(--font-cairo)' }}>INC ALG 3</h3></div>
+                <div className="grid grid-cols-2 gap-3">{[{ value: '50,000+', label: locale === 'ar' ? 'طالب' : 'Students' }, { value: '4', label: locale === 'ar' ? 'كليات' : 'Faculties' }, { value: '11+', label: locale === 'ar' ? 'دفعات' : 'Batches' }, { value: '1,800+', label: locale === 'ar' ? 'مشروع' : 'Projects' }].map((item, i) => (<div key={i} className="bg-white/10 backdrop-blur-sm rounded-xl p-3 text-center"><div className="text-lg font-black text-[#E4C97A]" style={{ fontFamily: 'var(--font-cairo)' }}>{item.value}</div><div className="text-xs text-white/70">{item.label}</div></div>))}</div>
+              </div>
             </motion.div>
           </div>
         </div>
@@ -280,9 +338,12 @@ function LandingPage({ locale, onNavigate }: { locale: Locale; onNavigate: (v: A
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-20" style={{ background: 'linear-gradient(135deg, #0D1B2A 0%, #1B3A6B 50%, #0F2140 100%)' }}>
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
+      {/* CTA with background image */}
+      <section className="py-20 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #0D1B2A 0%, #1B3A6B 50%, #0F2140 100%)' }}>
+        <motion.div animate={{ scale: [1, 1.05, 1] }} transition={{ duration: 8, repeat: Infinity }} className="absolute inset-0 opacity-10">
+          <img src="/images/cta-bg.png" alt="" className="w-full h-full object-cover" />
+        </motion.div>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center relative">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             <h2 className="text-4xl font-black text-white mb-4" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'cta.title')}</h2>
             <p className="text-lg text-white/70 mb-8">{t(locale, 'cta.subtitle')}</p>
@@ -349,7 +410,23 @@ function AuthPage({ locale, onNavigate, onLogin }: { locale: Locale; onNavigate:
         toast.success(locale === 'ar' ? 'تم تسجيل الدخول بنجاح' : 'Login successful');
         onNavigate('student-dashboard');
       } else if (!isLogin) {
-        onLogin({ id: 'student-new', email, name: name || email.split('@')[0], role: 'student', phone, faculty, level });
+        const newUserId = `student-${Date.now()}`;
+        onLogin({ id: newUserId, email, name: name || email.split('@')[0], role: 'student', phone, faculty, level });
+        // Auto-create project from registration data
+        const storeState = useAppStore.getState();
+        storeState.setStudentProject(newUserId, {
+          id: `proj-${Date.now()}`,
+          refNumber: `INC-2025-${String(Date.now()).slice(-3)}`,
+          projectName: '', projectNameEn: '', projectNameFr: '',
+          ownerName: name || email.split('@')[0], ownerEmail: email, ownerPhone: phone || '',
+          faculty: faculty || '', level: level || '',
+          field: 'other', description: '', problem: '', targetAudience: '', addedValue: '',
+          fundingRequired: 0, stage: 'idea', hasPartner: false, teamSize: 1,
+          status: 'review', score: null, evaluationNotes: '',
+          legalFramework: 'مؤسسة مصغرة', tradeName: '', academicYear: '2025/2026',
+          department: '', createdAt: new Date().toISOString(),
+          timeline: [{ date: new Date().toISOString().split('T')[0], event: 'تقديم المشروع', eventEn: 'Project Submitted' }]
+        });
         toast.success(locale === 'ar' ? 'تم إنشاء الحساب' : 'Account created');
         onNavigate('student-dashboard');
       } else {
@@ -738,10 +815,50 @@ function BMCToolEmbed({ locale }: { locale: Locale }) {
 // ==================== STUDENT DASHBOARD ====================
 
 function StudentDashboard({ locale, user, onNavigate }: { locale: Locale; user: any; onNavigate: (v: AppView) => void }) {
-  const { studentTab, setStudentTab, sidebarCollapsed, setSidebarCollapsed, editableStats, studentProfiles, setStudentProfile, setUser, messages } = useAppStore();
+  const { studentTab, setStudentTab, sidebarCollapsed, setSidebarCollapsed, editableStats, studentProfiles, setStudentProfile, setUser, messages, studentProjects, setStudentProject, projectTimelines, projectStatusOverrides } = useAppStore();
   const dir = localeDirection[locale];
 
-  const myProject = MOCK_PROJECTS.find(p => p.ownerEmail === user?.email) || MOCK_PROJECTS[0];
+  const [isEditingProject, setIsEditingProject] = useState(false);
+  // Project edit state
+  const [editProjectName, setEditProjectName] = useState('');
+  const [editProjectNameEn, setEditProjectNameEn] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editProblem, setEditProblem] = useState('');
+  const [editTargetAudience, setEditTargetAudience] = useState('');
+  const [editAddedValue, setEditAddedValue] = useState('');
+  const [editFundingRequired, setEditFundingRequired] = useState(0);
+  const [editField, setEditField] = useState('');
+  const [editStage, setEditStage] = useState('idea');
+  const [editTeamSize, setEditTeamSize] = useState(1);
+  const [editHasPartner, setEditHasPartner] = useState(false);
+  const [editLegalFramework, setEditLegalFramework] = useState('');
+  const [editTradeName, setEditTradeName] = useState('');
+  const [editAcademicYear, setEditAcademicYear] = useState('2025/2026');
+  const [editDepartment, setEditDepartment] = useState('');
+  const [editOwnerPhone, setEditOwnerPhone] = useState('');
+
+  // Get project from store, or mock data, or create default
+  const myProject: StudentProject = studentProjects[user?.id || ''] || 
+    (() => {
+      const found = MOCK_PROJECTS.find(p => p.ownerEmail === user?.email);
+      if (found) {
+        const proj: StudentProject = { ...found };
+        return proj;
+      }
+      return {
+        id: `proj-${user?.id || Date.now()}`,
+        refNumber: `INC-2025-${String(Date.now()).slice(-3)}`,
+        projectName: '', projectNameEn: '', projectNameFr: '',
+        ownerName: user?.name || '', ownerEmail: user?.email || '', ownerPhone: user?.phone || '',
+        faculty: user?.faculty || '', level: user?.level || '',
+        field: 'other', description: '', problem: '', targetAudience: '', addedValue: '',
+        fundingRequired: 0, stage: 'idea', hasPartner: false, teamSize: 1,
+        status: 'review', score: null, evaluationNotes: '',
+        legalFramework: '\u0645\u0624\u0633\u0633\u0629 \u0645\u0635\u063a\u0631\u0629', tradeName: '', academicYear: '2025/2026',
+        department: '', createdAt: new Date().toISOString(),
+        timeline: [{ date: new Date().toISOString().split('T')[0], event: '\u062a\u0642\u062f\u064a\u0645 \u0627\u0644\u0645\u0634\u0631\u0648\u0639', eventEn: 'Project Submitted' }]
+      };
+    })();
   const statusStepMap: Record<string, number> = { review: 0, committee: 1, accepted: 2, revision: 1, incubated: 4, rejected: -1 };
   const currentStep = statusStepMap[myProject.status] ?? 0;
 
@@ -770,6 +887,55 @@ function StudentDashboard({ locale, user, onNavigate }: { locale: Locale; user: 
       setEditPhone(myProject.ownerPhone || '');
     }
   }, [user?.id, studentProfiles, myProject]);
+
+  // Initialize project edit fields
+  useEffect(() => {
+    if (myProject) {
+      setEditProjectName(myProject.projectName || '');
+      setEditProjectNameEn(myProject.projectNameEn || '');
+      setEditDescription(myProject.description || '');
+      setEditProblem(myProject.problem || '');
+      setEditTargetAudience(myProject.targetAudience || '');
+      setEditAddedValue(myProject.addedValue || '');
+      setEditFundingRequired(myProject.fundingRequired || 0);
+      setEditField(myProject.field || 'other');
+      setEditStage(myProject.stage || 'idea');
+      setEditTeamSize(myProject.teamSize || 1);
+      setEditHasPartner(myProject.hasPartner || false);
+      setEditLegalFramework(myProject.legalFramework || '');
+      setEditTradeName(myProject.tradeName || '');
+      setEditAcademicYear(myProject.academicYear || '2025/2026');
+      setEditDepartment(myProject.department || '');
+      setEditOwnerPhone(myProject.ownerPhone || user?.phone || '');
+    }
+  }, [user?.id, studentProjects]);
+
+  const handleSaveProject = () => {
+    const updatedProject: StudentProject = {
+      ...myProject,
+      projectName: editProjectName,
+      projectNameEn: editProjectNameEn,
+      description: editDescription,
+      problem: editProblem,
+      targetAudience: editTargetAudience,
+      addedValue: editAddedValue,
+      fundingRequired: editFundingRequired,
+      field: editField,
+      stage: editStage,
+      teamSize: editTeamSize,
+      hasPartner: editHasPartner,
+      legalFramework: editLegalFramework,
+      tradeName: editTradeName,
+      academicYear: editAcademicYear,
+      department: editDepartment,
+      ownerPhone: editOwnerPhone,
+      ownerName: user?.name || myProject.ownerName,
+      ownerEmail: user?.email || myProject.ownerEmail,
+    };
+    setStudentProject(user?.id || '', updatedProject);
+    setIsEditingProject(false);
+    toast.success(t(locale, 'student.projectSaved'));
+  };
 
   const handleSaveProfile = () => {
     const profile = { name: editName, email: editEmail, phone: editPhone, faculty: editFaculty, level: editLevel, password: studentProfiles[user?.id || '']?.password || '' };
@@ -978,17 +1144,22 @@ function StudentDashboard({ locale, user, onNavigate }: { locale: Locale; user: 
               </div>
 
               {/* Timeline */}
-              {myProject.timeline && myProject.timeline.length > 0 && (
+              {(() => {
+                const adminEvents = projectTimelines[myProject.id] || [];
+                const statusOverride = projectStatusOverrides[myProject.id];
+                const effectiveProject = statusOverride ? { ...myProject, ...statusOverride } : myProject;
+                const allTimeline = [...(effectiveProject.timeline || []), ...adminEvents].sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
+                return allTimeline.length > 0 ? (
                 <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100">
                   <h3 className="text-lg font-bold text-[#1B3A6B] mb-4 flex items-center gap-2" style={{ fontFamily: 'var(--font-cairo)' }}><Clock className="w-5 h-5" />{t(locale, 'student.timelineInfo')}</h3>
                   <div className="space-y-4">
-                    {myProject.timeline.map((event: any, i: number) => (
+                    {allTimeline.map((event: any, i: number) => (
                       <div key={i} className="flex items-start gap-4">
                         <div className="flex flex-col items-center">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${i === myProject.timeline.length - 1 ? 'bg-[#C8A951] text-[#0D1B2A]' : 'bg-[#27AE60] text-white'}`}>
-                            {i === myProject.timeline.length - 1 ? <CircleDot className="w-4 h-4" /> : <Check className="w-4 h-4" />}
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${i === allTimeline.length - 1 ? 'bg-[#C8A951] text-[#0D1B2A]' : 'bg-[#27AE60] text-white'}`}>
+                            {i === allTimeline.length - 1 ? <CircleDot className="w-4 h-4" /> : <Check className="w-4 h-4" />}
                           </div>
-                          {i < myProject.timeline.length - 1 && <div className="w-0.5 h-8 bg-slate-200 mt-1" />}
+                          {i < allTimeline.length - 1 && <div className="w-0.5 h-8 bg-slate-200 mt-1" />}
                         </div>
                         <div>
                           <p className="text-sm font-bold text-[#1B3A6B]">{locale === 'ar' ? event.event : event.eventEn}</p>
@@ -998,7 +1169,8 @@ function StudentDashboard({ locale, user, onNavigate }: { locale: Locale; user: 
                     ))}
                   </div>
                 </div>
-              )}
+              ) : null;
+              })()}
 
               {/* Quick Stats */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -1021,18 +1193,186 @@ function StudentDashboard({ locale, user, onNavigate }: { locale: Locale; user: 
           {/* ========== MY PROJECT TAB ========== */}
           {studentTab === 'my-project' && (
             <div className="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden">
+              {/* Header */}
               <div className="p-6" style={{ background: 'linear-gradient(135deg, #0D1B2A, #1B3A6B)' }}>
-                <div className="flex items-center gap-2 mb-2"><FieldBadge field={myProject.field} locale={locale} /><StatusBadge status={myProject.status} locale={locale} /></div>
-                <h2 className="text-2xl font-black text-white" style={{ fontFamily: 'var(--font-cairo)' }}>{locale === 'ar' ? myProject.projectName : myProject.projectNameEn}</h2>
-                <p className="text-white/60 text-sm">{myProject.refNumber} • {myProject.tradeName}</p>
-              </div>
-              <div className="p-6 space-y-6">
-                <div><h4 className="font-bold text-[#1B3A6B] mb-2">{t(locale, 'projectDetail.overview')}</h4><p className="text-slate-600">{myProject.description}</p></div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">{[['problem', t(locale, 'projectSubmit.problem')], ['targetAudience', t(locale, 'projectSubmit.targetAudience')], ['addedValue', t(locale, 'projectSubmit.addedValue')]].map(([key, label]) => (<div key={key}><span className="text-xs text-slate-400">{label}</span><p className="text-sm font-medium text-slate-700">{(myProject as any)[key]}</p></div>))}</div>
-                  <div className="bg-[#F5F7FA] rounded-xl p-4 space-y-2">{[['fundingRequired', t(locale, 'projectSubmit.fundingRequired'), `${myProject.fundingRequired.toLocaleString()} د.ج`], ['stage', t(locale, 'projectSubmit.stage'), t(locale, `stages.${myProject.stage}`)], ['teamSize', t(locale, 'projectSubmit.teamSize'), String(myProject.teamSize)], ['score', t(locale, 'admin.score'), myProject.score ? `${myProject.score}/100` : t(locale, 'projectDetail.noScore')]].map(([key, label, value]) => (<div key={key as string} className="flex justify-between"><span className="text-xs text-slate-500">{label}</span><span className="text-xs font-bold text-[#1B3A6B]">{value}</span></div>))}</div>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <FieldBadge field={isEditingProject ? editField : myProject.field} locale={locale} />
+                    <StatusBadge status={myProject.status} locale={locale} />
+                    {isEditingProject && <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-[#C8A951]/20 text-[#C8A951] border border-[#C8A951]/30">{t(locale, 'student.editMode')}</span>}
+                  </div>
+                  <div className="flex gap-2">
+                    {!isEditingProject ? (
+                      <button onClick={() => setIsEditingProject(true)} className="px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all" style={{ backgroundColor: '#C8A951', color: '#0D1B2A' }}>
+                        <Edit className="w-4 h-4" />{t(locale, 'student.editProject')}
+                      </button>
+                    ) : (
+                      <>
+                        <button onClick={handleSaveProject} className="px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 bg-[#1B3A6B] text-white hover:bg-[#2952A3] transition-all">
+                          <Check className="w-4 h-4" />{t(locale, 'student.saveProject')}
+                        </button>
+                        <button onClick={() => { setIsEditingProject(false); }} className="px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 bg-white/10 text-white hover:bg-white/20 transition-all border border-white/20">
+                          <X className="w-4 h-4" />{t(locale, 'student.cancelEdit')}
+                        </button>
+                      </>
+                    )}
+                  </div>
                 </div>
-                {myProject.evaluationNotes && <div className="p-4 rounded-xl bg-[#C8A951]/5 border border-[#C8A951]/20"><p className="text-sm font-bold text-[#1B3A6B] mb-1">{t(locale, 'admin.notes')}</p><p className="text-sm text-slate-600">{myProject.evaluationNotes}</p></div>}
+                <h2 className="text-2xl font-black text-white" style={{ fontFamily: 'var(--font-cairo)' }}>
+                  {isEditingProject ? (editProjectName || t(locale, 'student.editProject')) : (locale === 'ar' ? myProject.projectName : myProject.projectNameEn) || t(locale, 'student.editProject')}
+                </h2>
+                <p className="text-white/60 text-sm">{myProject.refNumber} • {myProject.tradeName || '—'}</p>
+              </div>
+
+              {/* Content */}
+              <div className="p-6 space-y-6">
+                {!isEditingProject ? (
+                  /* ===== VIEW MODE ===== */
+                  <>
+                    <div>
+                      <h4 className="font-bold text-[#1B3A6B] mb-2">{t(locale, 'projectDetail.overview')}</h4>
+                      <p className="text-slate-600">{myProject.description || '—'}</p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-3">
+                        <div><span className="text-xs text-slate-400">{t(locale, 'projectSubmit.problem')}</span><p className="text-sm font-medium text-slate-700">{myProject.problem || '—'}</p></div>
+                        <div><span className="text-xs text-slate-400">{t(locale, 'projectSubmit.targetAudience')}</span><p className="text-sm font-medium text-slate-700">{myProject.targetAudience || '—'}</p></div>
+                        <div><span className="text-xs text-slate-400">{t(locale, 'projectSubmit.addedValue')}</span><p className="text-sm font-medium text-slate-700">{myProject.addedValue || '—'}</p></div>
+                      </div>
+                      <div className="bg-[#F5F7FA] rounded-xl p-4 space-y-2">
+                        {[
+                          [t(locale, 'projectSubmit.fundingRequired'), `${(myProject.fundingRequired || 0).toLocaleString()} د.ج`],
+                          [t(locale, 'student.stage'), t(locale, `stages.${myProject.stage}`)],
+                          [t(locale, 'student.teamSize'), String(myProject.teamSize)],
+                          [t(locale, 'student.hasPartner'), myProject.hasPartner ? (locale === 'ar' ? 'نعم' : 'Yes') : (locale === 'ar' ? 'لا' : 'No')],
+                          [t(locale, 'student.legalFramework'), myProject.legalFramework || '—'],
+                          [t(locale, 'student.tradeName'), myProject.tradeName || '—'],
+                          [t(locale, 'student.academicYear'), myProject.academicYear || '—'],
+                          [t(locale, 'student.department'), myProject.department || '—'],
+                          [t(locale, 'admin.score'), myProject.score ? `${myProject.score}/100` : '—'],
+                        ].map(([label, value], i) => (
+                          <div key={i} className="flex justify-between"><span className="text-xs text-slate-500">{label}</span><span className="text-xs font-bold text-[#1B3A6B]">{value}</span></div>
+                        ))}
+                      </div>
+                    </div>
+                    {myProject.evaluationNotes && <div className="p-4 rounded-xl bg-[#C8A951]/5 border border-[#C8A951]/20"><p className="text-sm font-bold text-[#1B3A6B] mb-1">{t(locale, 'admin.notes')}</p><p className="text-sm text-slate-600">{myProject.evaluationNotes}</p></div>}
+                  </>
+                ) : (
+                  /* ===== EDIT MODE ===== */
+                  <div className="space-y-6">
+                    {/* Project Names */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'projectSubmit.projectName')} (AR)</label>
+                        <input value={editProjectName} onChange={(e) => setEditProjectName(e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm" placeholder={locale === 'ar' ? 'اسم المشروع بالعربية' : 'Project name in Arabic'} />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'projectSubmit.projectName')} (EN)</label>
+                        <input value={editProjectNameEn} onChange={(e) => setEditProjectNameEn(e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm" placeholder="Project name in English" />
+                      </div>
+                    </div>
+
+                    {/* Description */}
+                    <div>
+                      <label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'projectDetail.overview')}</label>
+                      <textarea value={editDescription} onChange={(e) => setEditDescription(e.target.value)} rows={3} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm resize-none" />
+                    </div>
+
+                    {/* Problem, Target, Value */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'projectSubmit.problem')}</label>
+                        <textarea value={editProblem} onChange={(e) => setEditProblem(e.target.value)} rows={2} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm resize-none" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'projectSubmit.targetAudience')}</label>
+                        <textarea value={editTargetAudience} onChange={(e) => setEditTargetAudience(e.target.value)} rows={2} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm resize-none" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'projectSubmit.addedValue')}</label>
+                        <textarea value={editAddedValue} onChange={(e) => setEditAddedValue(e.target.value)} rows={2} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm resize-none" />
+                      </div>
+                    </div>
+
+                    {/* Field, Stage, Funding */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'student.projectField')}</label>
+                        <select value={editField} onChange={(e) => setEditField(e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm bg-white">
+                          {(['ict', 'digital', 'energy', 'ecommerce', 'minerals', 'industry', 'health', 'education', 'agri', 'other'] as const).map((f) => (<option key={f} value={f}>{t(locale, `fields.${f}`)}</option>))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'student.stage')}</label>
+                        <select value={editStage} onChange={(e) => setEditStage(e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm bg-white">
+                          {(['idea', 'study', 'prototype', 'startup', 'growth'] as const).map((s) => (<option key={s} value={s}>{t(locale, `stages.${s}`)}</option>))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'projectSubmit.fundingRequired')} (د.ج)</label>
+                        <input type="number" value={editFundingRequired} onChange={(e) => setEditFundingRequired(Number(e.target.value))} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm" />
+                      </div>
+                    </div>
+
+                    {/* Team, Partner, Legal, Trade Name */}
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'student.teamSize')}</label>
+                        <input type="number" min={1} max={20} value={editTeamSize} onChange={(e) => setEditTeamSize(Number(e.target.value))} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'student.hasPartner')}</label>
+                        <select value={editHasPartner ? 'yes' : 'no'} onChange={(e) => setEditHasPartner(e.target.value === 'yes')} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm bg-white">
+                          <option value="no">{locale === 'ar' ? 'لا' : 'No'}</option>
+                          <option value="yes">{locale === 'ar' ? 'نعم' : 'Yes'}</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'student.legalFramework')}</label>
+                        <select value={editLegalFramework} onChange={(e) => setEditLegalFramework(e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm bg-white">
+                          <option value="مؤسسة مصغرة">مؤسسة مصغرة</option>
+                          <option value="شركة ذات مسؤولية محدودة">شركة ذات مسؤولية محدودة</option>
+                          <option value="مؤسسة فردية">مؤسسة فردية</option>
+                          <option value="شركة أشخاص">شركة أشخاص</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'student.tradeName')}</label>
+                        <input value={editTradeName} onChange={(e) => setEditTradeName(e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm" />
+                      </div>
+                    </div>
+
+                    {/* Academic Year, Department, Phone */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'student.academicYear')}</label>
+                        <select value={editAcademicYear} onChange={(e) => setEditAcademicYear(e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm bg-white">
+                          <option value="2024/2025">2024/2025</option>
+                          <option value="2025/2026">2025/2026</option>
+                          <option value="2026/2027">2026/2027</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'student.department')}</label>
+                        <input value={editDepartment} onChange={(e) => setEditDepartment(e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'student.phoneLabel')}</label>
+                        <input value={editOwnerPhone} onChange={(e) => setEditOwnerPhone(e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm" placeholder="05XXXXXXXX" />
+                      </div>
+                    </div>
+
+                    {/* Read-only admin fields */}
+                    <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                      <p className="text-sm font-bold text-slate-500 mb-2">{locale === 'ar' ? 'معلومات الإدارة (للقراءة فقط)' : 'Admin Info (Read-only)'}</p>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div><span className="text-xs text-slate-400">{locale === 'ar' ? 'الحالة' : 'Status'}</span><p className="text-sm font-medium text-slate-700"><StatusBadge status={myProject.status} locale={locale} /></p></div>
+                        <div><span className="text-xs text-slate-400">{t(locale, 'admin.score')}</span><p className="text-sm font-medium text-slate-700">{myProject.score ? `${myProject.score}/100` : '—'}</p></div>
+                        <div><span className="text-xs text-slate-400">{t(locale, 'admin.notes')}</span><p className="text-sm font-medium text-slate-700">{myProject.evaluationNotes || '—'}</p></div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -1197,11 +1537,95 @@ function StudentDashboard({ locale, user, onNavigate }: { locale: Locale; user: 
 // ==================== ADMIN DASHBOARD ====================
 
 function AdminDashboard({ locale }: { locale: Locale }) {
-  const { adminTab, setAdminTab, sidebarCollapsed, setSidebarCollapsed, editableStats, setEditableStats, messages, setSelectedProjectId } = useAppStore();
+  const { adminTab, setAdminTab, sidebarCollapsed, setSidebarCollapsed, editableStats, setEditableStats, messages, setSelectedProjectId, studentProjects, projectTimelines, addProjectTimelineEvent, projectStatusOverrides, setProjectStatusOverride, adminUsers, setAdminUser, adminSettings, setAdminSettings } = useAppStore();
   const [evalModal, setEvalModal] = useState<string | null>(null);
   const [evalScore, setEvalScore] = useState('');
   const [evalNotes, setEvalNotes] = useState('');
+  const [selectedProject, setSelectedProject] = useState<any>(null);
+  const [timelineEvent, setTimelineEvent] = useState('');
+  const [timelineEventEn, setTimelineEventEn] = useState('');
+  const [editUserModal, setEditUserModal] = useState<string | null>(null);
+  const [editUserName, setEditUserName] = useState('');
+  const [editUserEmail, setEditUserEmail] = useState('');
+  const [editUserPhone, setEditUserPhone] = useState('');
+  const [editUserFaculty, setEditUserFaculty] = useState('');
+  const [editUserLevel, setEditUserLevel] = useState('');
+  const [editUserRole, setEditUserRole] = useState('student');
+  const [editUserActive, setEditUserActive] = useState(true);
+  const [settingsPassword, setSettingsPassword] = useState('');
+  const [settingsNewPassword, setSettingsNewPassword] = useState('');
+  const [settingsConfirmPassword, setSettingsConfirmPassword] = useState('');
   const dir = localeDirection[locale];
+
+  // Build allProjects from mock + store
+  const allProjects = React.useMemo(() => {
+    return [...MOCK_PROJECTS, ...Object.values(studentProjects).filter(sp => !MOCK_PROJECTS.find(p => p.ownerEmail === sp.ownerEmail))];
+  }, [studentProjects]);
+
+  // Apply status overrides
+  const getProject = (p: any) => {
+    const override = projectStatusOverrides[p.id];
+    if (override) return { ...p, ...override };
+    return p;
+  };
+
+  // Dynamic stats computed from real data
+  const dynamicStats = React.useMemo(() => {
+    const projects = allProjects.map(getProject);
+    return {
+      totalUsers: new Set([...projects.map((p: any) => p.ownerEmail), 'admin@univ-alger3.dz']).size,
+      totalProjects: projects.length,
+      pendingReview: projects.filter((p: any) => p.status === 'review').length,
+      acceptedProjects: projects.filter((p: any) => ['accepted', 'incubated'].includes(p.status)).length,
+      incubatedProjects: projects.filter((p: any) => p.status === 'incubated').length,
+      rejectedProjects: projects.filter((p: any) => p.status === 'rejected').length,
+      revisionProjects: projects.filter((p: any) => p.status === 'revision').length,
+      committeeProjects: projects.filter((p: any) => p.status === 'committee').length,
+      byField: Object.entries(projects.reduce((acc: any, p: any) => { acc[p.field] = (acc[p.field] || 0) + 1; return acc; }, {})),
+    };
+  }, [allProjects, projectStatusOverrides]);
+
+  // Recent activity from all project timelines + admin-added events
+  const recentActivity = React.useMemo(() => {
+    const activities: any[] = [];
+    allProjects.forEach((p: any) => {
+      const proj = getProject(p);
+      if (proj.timeline) {
+        proj.timeline.forEach((ev: any) => {
+          activities.push({ ...ev, projectName: locale === 'ar' ? proj.projectName : proj.projectNameEn, projectRef: proj.refNumber });
+        });
+      }
+      const adminEvents = projectTimelines[proj.id] || [];
+      adminEvents.forEach((ev: any) => {
+        activities.push({ date: ev.date, event: ev.event, eventEn: ev.eventEn, projectName: locale === 'ar' ? proj.projectName : proj.projectNameEn, projectRef: proj.refNumber });
+      });
+    });
+    activities.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    return activities.slice(0, 8);
+  }, [allProjects, projectTimelines, locale]);
+
+  // Users list from projects + admin
+  const allUsers = React.useMemo(() => {
+    const users: any[] = [{ id: 'admin-001', name: locale === 'ar' ? 'المدير العام' : 'Admin', email: 'admin@univ-alger3.dz', phone: '', faculty: '', level: '', role: 'admin', active: true }];
+    const seen = new Set<string>();
+    allProjects.forEach((p: any) => {
+      if (!seen.has(p.ownerEmail)) {
+        seen.add(p.ownerEmail);
+        const stored = adminUsers[p.ownerEmail];
+        users.push({
+          id: p.ownerEmail,
+          name: stored?.name || p.ownerName,
+          email: stored?.email || p.ownerEmail,
+          phone: stored?.phone || p.ownerPhone || '',
+          faculty: stored?.faculty || p.faculty || '',
+          level: stored?.level || p.level || '',
+          role: stored?.role || 'student',
+          active: stored?.active !== undefined ? stored.active : true,
+        });
+      }
+    });
+    return users;
+  }, [allProjects, adminUsers, locale]);
 
   const unreadAdmin = messages.filter((m: Message) => m.to === 'admin-001' && !m.read).length;
 
@@ -1213,18 +1637,90 @@ function AdminDashboard({ locale }: { locale: Locale }) {
     { key: 'messages', label: t(locale, 'admin.messages'), icon: MessageCircle, badge: unreadAdmin },
     { key: 'events', label: t(locale, 'admin.events'), icon: Activity },
     { key: 'stats', label: t(locale, 'admin.editStats'), icon: Settings },
+    { key: 'settings', label: t(locale, 'admin.settings'), icon: Settings },
   ];
 
   const handleProjectAction = (projectId: string, action: string) => {
-    toast.success(`${action} — ${projectId}`);
+    const score = evalScore ? Number(evalScore) : null;
+    const notes = evalNotes || '';
+    let newStatus = action;
+    if (action === 'accept') newStatus = 'accepted';
+    if (action === 'reject') newStatus = 'rejected';
+    if (action === 'revision') newStatus = 'revision';
+    if (action === 'incubate') newStatus = 'incubated';
+    setProjectStatusOverride(projectId, { status: newStatus, score: score !== null ? score : undefined as any, evaluationNotes: notes });
+    toast.success(locale === 'ar' ? `تم ${action === 'accept' ? 'قبول' : action === 'reject' ? 'رفض' : action === 'revision' ? 'طلب تعديل' : 'احتضان'} المشروع` : `Project ${action}ed`);
     setEvalModal(null);
+    setEvalScore('');
+    setEvalNotes('');
+  };
+
+  const handleAddTimelineEvent = (projectId: string) => {
+    if (!timelineEvent.trim()) return;
+    addProjectTimelineEvent(projectId, {
+      id: `tl-${Date.now()}`,
+      projectId,
+      date: new Date().toISOString().split('T')[0],
+      event: timelineEvent,
+      eventEn: timelineEventEn || timelineEvent,
+      addedBy: 'admin',
+    });
+    setTimelineEvent('');
+    setTimelineEventEn('');
+    toast.success(locale === 'ar' ? 'تم إضافة الحدث للمسار' : 'Timeline event added');
+  };
+
+  const handleEditUser = (userId: string) => {
+    const user = allUsers.find((u: any) => u.id === userId);
+    if (user) {
+      setEditUserName(user.name);
+      setEditUserEmail(user.email);
+      setEditUserPhone(user.phone);
+      setEditUserFaculty(user.faculty);
+      setEditUserLevel(user.level);
+      setEditUserRole(user.role);
+      setEditUserActive(user.active);
+      setEditUserModal(userId);
+    }
+  };
+
+  const handleSaveUser = () => {
+    if (editUserModal) {
+      setAdminUser(editUserModal, { id: editUserModal, name: editUserName, email: editUserEmail, phone: editUserPhone, faculty: editUserFaculty, level: editUserLevel, role: editUserRole, active: editUserActive });
+      setEditUserModal(null);
+      toast.success(locale === 'ar' ? 'تم تحديث المستخدم' : 'User updated');
+    }
+  };
+
+  const handleSaveSettings = () => {
+    toast.success(locale === 'ar' ? 'تم حفظ الإعدادات' : 'Settings saved');
+  };
+
+  const handleChangeAdminPassword = () => {
+    if (settingsPassword !== adminSettings.adminPassword) {
+      toast.error(locale === 'ar' ? 'كلمة المرور الحالية غير صحيحة' : 'Current password incorrect');
+      return;
+    }
+    if (settingsNewPassword !== settingsConfirmPassword) {
+      toast.error(locale === 'ar' ? 'كلمتا المرور غير متطابقتين' : 'Passwords do not match');
+      return;
+    }
+    if (settingsNewPassword.length < 4) {
+      toast.error(locale === 'ar' ? 'كلمة المرور قصيرة جداً' : 'Password too short');
+      return;
+    }
+    setAdminSettings({ ...adminSettings, adminPassword: settingsNewPassword });
+    setSettingsPassword('');
+    setSettingsNewPassword('');
+    setSettingsConfirmPassword('');
+    toast.success(locale === 'ar' ? 'تم تغيير كلمة المرور' : 'Password changed');
   };
 
   const statCards = [
-    { label: t(locale, 'admin.totalUsers'), value: 847, icon: Users, color: '#1B3A6B', change: '+12%' },
-    { label: t(locale, 'admin.totalProjects'), value: editableStats.totalSubmitted, icon: FileText, color: '#C8A951', change: '+23%' },
-    { label: t(locale, 'admin.pendingReview'), value: editableStats.evaluating, icon: ClipboardCheck, color: '#F39C12', change: '+8%' },
-    { label: t(locale, 'admin.acceptedProjects'), value: editableStats.accepted, icon: Check, color: '#27AE60', change: '+15%' },
+    { label: t(locale, 'admin.totalUsers'), value: dynamicStats.totalUsers, icon: Users, color: '#1B3A6B' },
+    { label: t(locale, 'admin.totalProjects'), value: dynamicStats.totalProjects, icon: FileText, color: '#C8A951' },
+    { label: t(locale, 'admin.pendingReview'), value: dynamicStats.pendingReview, icon: ClipboardCheck, color: '#F39C12' },
+    { label: t(locale, 'admin.acceptedProjects'), value: dynamicStats.acceptedProjects, icon: Check, color: '#27AE60' },
   ];
 
   return (
@@ -1235,69 +1731,226 @@ function AdminDashboard({ locale }: { locale: Locale }) {
           <div className="flex items-center gap-4"><div className="w-12 h-12 rounded-xl bg-[#C8A951] flex items-center justify-center"><Shield className="w-6 h-6 text-[#0D1B2A]" /></div><div><h1 className="text-xl font-black text-white" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'admin.title')}</h1><p className="text-[#E4C97A] text-xs">INC ALG 3</p></div></div>
         </div>
 
-        {/* Mobile tabs */}
-        <div className="md:hidden flex gap-1 p-2 overflow-x-auto bg-white border-b border-slate-200">{tabs.map((tab) => (<button key={tab.key} onClick={() => setAdminTab(tab.key)} className={`flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap ${adminTab === tab.key ? 'bg-[#0D1B2A] text-white' : 'text-slate-500'}`}><tab.icon className="w-3.5 h-3.5" />{tab.label}</button>))}</div>
+        <div className="md:hidden flex gap-1 p-2 overflow-x-auto bg-white border-b border-slate-200">{tabs.map((tab) => (<button key={tab.key} onClick={() => setAdminTab(tab.key)} className={`flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap \${adminTab === tab.key ? 'bg-[#0D1B2A] text-white' : 'text-slate-500'}`}><tab.icon className="w-3.5 h-3.5" />{tab.label}</button>))}</div>
 
         <div className="flex-1 p-4 sm:p-6 overflow-y-auto">
-          {/* Overview */}
+          {/* ========== OVERVIEW TAB - Dynamic Real Data ========== */}
           {adminTab === 'overview' && (
             <div className="space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {statCards.map((card, i) => (<motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} className="bg-white rounded-2xl p-5 shadow-md border border-slate-100">
-                  <div className="flex items-center justify-between mb-3"><div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${card.color}12` }}><card.icon className="w-6 h-6" style={{ color: card.color }} /></div><span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-lg">{card.change}</span></div>
+                  <div className="flex items-center justify-between mb-3"><div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${card.color}12` }}><card.icon className="w-6 h-6" style={{ color: card.color }} /></div></div>
                   <div className="text-2xl font-black" style={{ fontFamily: 'var(--font-cairo)', color: card.color }}>{card.value.toLocaleString()}</div>
                   <div className="text-sm text-slate-500">{card.label}</div>
                 </motion.div>))}
               </div>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100">
-                  <h3 className="font-bold text-[#1B3A6B] mb-4" style={{ fontFamily: 'var(--font-cairo)' }}>{locale === 'ar' ? 'المشاريع حسب الحالة' : 'Projects by Status'}</h3>
+                  <h3 className="font-bold text-[#1B3A6B] mb-4" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'admin.projectsByStatus')}</h3>
                   <div className="space-y-3">{[
-                    { label: t(locale, 'status.review'), value: editableStats.evaluating, total: editableStats.totalSubmitted, color: '#F39C12' },
-                    { label: t(locale, 'status.accepted'), value: editableStats.accepted, total: editableStats.totalSubmitted, color: '#27AE60' },
-                    { label: t(locale, 'status.incubated'), value: editableStats.startups, total: editableStats.totalSubmitted, color: '#2E7D32' },
-                    { label: t(locale, 'status.rejected'), value: 89, total: editableStats.totalSubmitted, color: '#C0392B' },
-                  ].map((item, i) => (<div key={i}><div className="flex justify-between text-sm mb-1"><span className="text-slate-600">{item.label}</span><span className="font-bold" style={{ color: item.color }}>{item.value}</span></div><div className="h-3 bg-slate-100 rounded-full overflow-hidden"><motion.div initial={{ width: 0 }} animate={{ width: `${(item.value / item.total) * 100}%` }} transition={{ delay: i * 0.1, duration: 0.8 }} className="h-full rounded-full" style={{ backgroundColor: item.color }} /></div></div>))}</div>
+                    { label: t(locale, 'status.review'), value: dynamicStats.pendingReview, total: dynamicStats.totalProjects, color: '#F39C12' },
+                    { label: t(locale, 'status.committee'), value: dynamicStats.committeeProjects, total: dynamicStats.totalProjects, color: '#2952A3' },
+                    { label: t(locale, 'status.accepted'), value: dynamicStats.acceptedProjects, total: dynamicStats.totalProjects, color: '#27AE60' },
+                    { label: t(locale, 'status.incubated'), value: dynamicStats.incubatedProjects, total: dynamicStats.totalProjects, color: '#2E7D32' },
+                    { label: t(locale, 'status.revision'), value: dynamicStats.revisionProjects, total: dynamicStats.totalProjects, color: '#E67E22' },
+                    { label: t(locale, 'status.rejected'), value: dynamicStats.rejectedProjects, total: dynamicStats.totalProjects, color: '#C0392B' },
+                  ].map((item, i) => (<div key={i}><div className="flex justify-between text-sm mb-1"><span className="text-slate-600">{item.label}</span><span className="font-bold" style={{ color: item.color }}>{item.value}</span></div><div className="h-3 bg-slate-100 rounded-full overflow-hidden"><motion.div initial={{ width: 0 }} animate={{ width: `${item.total > 0 ? (item.value / item.total) * 100 : 0}%` }} transition={{ delay: i * 0.1, duration: 0.8 }} className="h-full rounded-full" style={{ backgroundColor: item.color }} /></div></div>))}</div>
                 </div>
                 <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100">
-                  <h3 className="font-bold text-[#1B3A6B] mb-4" style={{ fontFamily: 'var(--font-cairo)' }}>{locale === 'ar' ? 'المشاريع حسب المجال' : 'Projects by Field'}</h3>
-                  <div className="grid grid-cols-2 gap-3">{[['ict', 420, '#1B3A6B'], ['digital', 380, '#2952A3'], ['energy', 290, '#F39C12'], ['ecommerce', 310, '#C8A951'], ['minerals', 180, '#2E7D32'], ['industry', 220, '#E67E22']].map(([field, count, color], i) => (<div key={i} className="bg-slate-50 rounded-xl p-3 text-center"><div className="text-xl font-black" style={{ fontFamily: 'var(--font-cairo)', color }}>{count}</div><div className="text-xs text-slate-500">{t(locale, `fields.${field}`)}</div></div>))}</div>
+                  <h3 className="font-bold text-[#1B3A6B] mb-4" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'admin.projectsByField')}</h3>
+                  <div className="grid grid-cols-2 gap-3">{dynamicStats.byField.map(([field, count]: any, i: number) => {
+                    const colors: Record<string, string> = { ict: '#1B3A6B', digital: '#2952A3', energy: '#F39C12', ecommerce: '#C8A951', minerals: '#2E7D32', industry: '#E67E22', other: '#6B7280' };
+                    const color = colors[field] || '#6B7280';
+                    return (<div key={i} className="bg-slate-50 rounded-xl p-3 text-center"><div className="text-xl font-black" style={{ fontFamily: 'var(--font-cairo)', color }}>{count as number}</div><div className="text-xs text-slate-500">{t(locale, `fields.${field}`)}</div></div>);
+                  })}</div>
+                </div>
+              </div>
+              {/* Recent Activity */}
+              <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100">
+                <h3 className="font-bold text-[#1B3A6B] mb-4 flex items-center gap-2" style={{ fontFamily: 'var(--font-cairo)' }}><Activity className="w-5 h-5" />{t(locale, 'admin.recentActivity')}</h3>
+                <div className="space-y-3">
+                  {recentActivity.length === 0 && <p className="text-center text-slate-400 py-4">{t(locale, 'common.noData')}</p>}
+                  {recentActivity.map((act: any, i: number) => (
+                    <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors">
+                      <div className="w-8 h-8 rounded-full bg-[#1B3A6B]/10 flex items-center justify-center shrink-0"><Clock className="w-4 h-4 text-[#1B3A6B]" /></div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-[#1B3A6B] truncate">{locale === 'ar' ? act.event : act.eventEn}</p>
+                        <p className="text-xs text-slate-400 truncate">{act.projectName} • {act.projectRef}</p>
+                      </div>
+                      <span className="text-xs text-slate-400 shrink-0">{new Date(act.date).toLocaleDateString(locale === 'ar' ? 'ar-DZ' : locale)}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
           )}
 
-          {/* Projects */}
+          {/* ========== PROJECTS TAB - Full Detail View ========== */}
           {adminTab === 'projects' && (
-            <div className="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-[#F5F7FA]"><tr><th className="px-4 py-3 text-start text-xs font-bold text-slate-500">#</th><th className="px-4 py-3 text-start text-xs font-bold text-slate-500">{t(locale, 'projectSubmit.projectName')}</th><th className="px-4 py-3 text-start text-xs font-bold text-slate-500">{t(locale, 'projectSubmit.ownerName')}</th><th className="px-4 py-3 text-start text-xs font-bold text-slate-500">{t(locale, 'projectSubmit.field')}</th><th className="px-4 py-3 text-start text-xs font-bold text-slate-500">{t(locale, 'common.status')}</th><th className="px-4 py-3 text-start text-xs font-bold text-slate-500">{t(locale, 'admin.score')}</th><th className="px-4 py-3 text-start text-xs font-bold text-slate-500">{t(locale, 'common.actions')}</th></tr></thead>
-                  <tbody className="divide-y divide-slate-100">{MOCK_PROJECTS.map((project) => (<tr key={project.id} className="hover:bg-slate-50 transition-colors cursor-pointer" onClick={() => { setSelectedProjectId(project.id); }}>
-                    <td className="px-4 py-3 text-sm font-mono text-slate-400">{project.refNumber}</td>
-                    <td className="px-4 py-3 text-sm font-bold text-[#1B3A6B]">{locale === 'ar' ? project.projectName : project.projectNameEn}</td>
-                    <td className="px-4 py-3 text-sm text-slate-600">{project.ownerName}</td>
-                    <td className="px-4 py-3"><FieldBadge field={project.field} locale={locale} /></td>
-                    <td className="px-4 py-3"><StatusBadge status={project.status} locale={locale} /></td>
-                    <td className="px-4 py-3 text-sm font-bold" style={{ color: project.score ? (project.score >= 80 ? '#27AE60' : '#F39C12') : '#9CA3AF' }}>{project.score || '—'}</td>
-                    <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                      <div className="flex gap-1">
-                        <button onClick={() => setEvalModal(project.id)} className="p-1.5 rounded-lg bg-[#1B3A6B]/5 hover:bg-[#1B3A6B]/10 text-[#1B3A6B]" title={t(locale, 'admin.evaluate')}><Edit className="w-3.5 h-3.5" /></button>
-                        {project.status === 'review' && (<><button onClick={() => handleProjectAction(project.id, 'accept')} className="p-1.5 rounded-lg bg-green-50 hover:bg-green-100 text-green-600"><Check className="w-3.5 h-3.5" /></button><button onClick={() => handleProjectAction(project.id, 'reject')} className="p-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-600"><X className="w-3.5 h-3.5" /></button></>)}
-                        {project.status === 'accepted' && <button onClick={() => handleProjectAction(project.id, 'incubate')} className="p-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-600"><Rocket className="w-3.5 h-3.5" /></button>}
+            selectedProject ? (
+              /* Project Detail View */
+              <div className="space-y-6">
+                <button onClick={() => setSelectedProject(null)} className="flex items-center gap-2 text-[#1B3A6B] font-bold hover:text-[#C8A951] transition-colors"><ArrowRight className="w-4 h-4 rtl-flip" />{t(locale, 'admin.backToProjects')}</button>
+                {(() => {
+                  const proj = getProject(selectedProject);
+                  const adminEvents = projectTimelines[proj.id] || [];
+                  const allTimelineEvents = [...(proj.timeline || []), ...adminEvents].sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
+                  return (
+                    <>
+                      {/* Header */}
+                      <div className="bg-white rounded-2xl overflow-hidden shadow-md border border-slate-100">
+                        <div className="p-6" style={{ background: 'linear-gradient(135deg, #0D1B2A, #1B3A6B)' }}>
+                          <div className="flex flex-wrap items-center gap-2 mb-3"><FieldBadge field={proj.field} locale={locale} /><StatusBadge status={proj.status} locale={locale} /><span className="text-white/40 text-sm font-mono">{proj.refNumber}</span></div>
+                          <h2 className="text-2xl font-black text-white mb-1" style={{ fontFamily: 'var(--font-cairo)' }}>{locale === 'ar' ? proj.projectName : proj.projectNameEn}</h2>
+                          <p className="text-white/60 text-sm">{proj.tradeName || ''} • {proj.ownerName}</p>
+                        </div>
+                        <div className="p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+                          {/* Owner Info */}
+                          <div>
+                            <h4 className="font-bold text-[#1B3A6B] mb-3 flex items-center gap-2" style={{ fontFamily: 'var(--font-cairo)' }}><Users className="w-4 h-4" />{t(locale, 'admin.ownerInfo')}</h4>
+                            <div className="space-y-2">
+                              {[
+                                [t(locale, 'projectSubmit.ownerName'), proj.ownerName],
+                                [t(locale, 'auth.email'), proj.ownerEmail],
+                                [t(locale, 'auth.phone'), proj.ownerPhone],
+                                [t(locale, 'auth.faculty'), t(locale, `faculties.${proj.faculty}`)],
+                                [t(locale, 'auth.level'), t(locale, `levels.${proj.level}`)],
+                                [t(locale, 'projectSubmit.department'), proj.department],
+                                [t(locale, 'projectSubmit.academicYear'), proj.academicYear],
+                              ].map(([label, value], i) => (<div key={i} className="flex justify-between py-1 border-b border-slate-50"><span className="text-xs text-slate-500">{label}</span><span className="text-xs font-bold text-[#1B3A6B]">{value || '—'}</span></div>))}
+                            </div>
+                          </div>
+                          {/* Project Info */}
+                          <div>
+                            <h4 className="font-bold text-[#1B3A6B] mb-3 flex items-center gap-2" style={{ fontFamily: 'var(--font-cairo)' }}><FileText className="w-4 h-4" />{t(locale, 'admin.projectInfo')}</h4>
+                            <div className="space-y-2">
+                              <div><span className="text-xs text-slate-400">{t(locale, 'projectDetail.overview')}</span><p className="text-sm text-slate-700 mt-1 leading-relaxed">{proj.description || '—'}</p></div>
+                              {[[t(locale, 'projectSubmit.problem'), proj.problem], [t(locale, 'projectSubmit.targetAudience'), proj.targetAudience], [t(locale, 'projectSubmit.addedValue'), proj.addedValue]].map(([label, value]: any, i: number) => (<div key={i}><span className="text-xs text-slate-400">{label}</span><p className="text-xs font-medium text-slate-700">{value || '—'}</p></div>))}
+                            </div>
+                          </div>
+                          {/* Financial + Evaluation */}
+                          <div className="space-y-4">
+                            <div>
+                              <h4 className="font-bold text-[#1B3A6B] mb-3 flex items-center gap-2" style={{ fontFamily: 'var(--font-cairo)' }}><Banknote className="w-4 h-4" />{t(locale, 'admin.financialInfo')}</h4>
+                              <div className="space-y-1">
+                                {[
+                                  [t(locale, 'projectSubmit.fundingRequired'), `${(proj.fundingRequired || 0).toLocaleString()} د.ج`],
+                                  [t(locale, 'student.stage'), t(locale, `stages.${proj.stage}`)],
+                                  [t(locale, 'student.teamSize'), String(proj.teamSize)],
+                                  [t(locale, 'student.hasPartner'), proj.hasPartner ? (locale === 'ar' ? 'نعم' : 'Yes') : (locale === 'ar' ? 'لا' : 'No')],
+                                  [t(locale, 'student.legalFramework'), proj.legalFramework],
+                                  [t(locale, 'student.tradeName'), proj.tradeName],
+                                ].map(([label, value], i) => (<div key={i} className="flex justify-between py-1 border-b border-slate-50"><span className="text-xs text-slate-500">{label}</span><span className="text-xs font-bold text-[#1B3A6B]">{value || '—'}</span></div>))}
+                              </div>
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-[#1B3A6B] mb-3 flex items-center gap-2" style={{ fontFamily: 'var(--font-cairo)' }}><Award className="w-4 h-4" />{t(locale, 'admin.evaluationInfo')}</h4>
+                              <div className="space-y-1">
+                                <div className="flex justify-between"><span className="text-xs text-slate-500">{t(locale, 'admin.score')}</span><span className={`text-lg font-black \${proj.score ? (proj.score >= 80 ? 'text-green-600' : proj.score >= 60 ? 'text-amber-600' : 'text-red-600') : 'text-slate-400'}`}>{proj.score ? `${proj.score}/100` : t(locale, 'projectDetail.noScore')}</span></div>
+                                {proj.evaluationNotes && <div className="p-2 rounded-lg bg-[#C8A951]/5 border border-[#C8A951]/20"><p className="text-xs text-slate-600">{proj.evaluationNotes}</p></div>}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        {/* Action Buttons */}
+                        <div className="px-6 pb-6 flex flex-wrap gap-2">
+                          <button onClick={() => { setEvalModal(proj.id); setEvalScore(proj.score?.toString() || ''); setEvalNotes(proj.evaluationNotes || ''); }} className="px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 bg-[#1B3A6B] text-white hover:bg-[#2952A3]"><Edit className="w-4 h-4" />{t(locale, 'admin.evaluate')}</button>
+                          {proj.status === 'review' && (<><button onClick={() => handleProjectAction(proj.id, 'accept')} className="px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 bg-green-600 text-white hover:bg-green-700"><Check className="w-4 h-4" />{t(locale, 'admin.accept')}</button><button onClick={() => handleProjectAction(proj.id, 'reject')} className="px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 bg-red-600 text-white hover:bg-red-700"><X className="w-4 h-4" />{t(locale, 'admin.reject')}</button></>)}
+                          <button onClick={() => handleProjectAction(proj.id, 'revision')} className="px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 bg-amber-600 text-white hover:bg-amber-700"><RefreshCw className="w-4 h-4" />{t(locale, 'admin.revision')}</button>
+                          {proj.status === 'accepted' && <button onClick={() => handleProjectAction(proj.id, 'incubate')} className="px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 bg-emerald-600 text-white hover:bg-emerald-700"><Rocket className="w-4 h-4" />{t(locale, 'admin.incubate')}</button>}
+                        </div>
                       </div>
-                    </td>
-                  </tr>))}</tbody>
-                </table>
+                      {/* Timeline + Add Event */}
+                      <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100">
+                        <h4 className="font-bold text-[#1B3A6B] mb-4 flex items-center gap-2" style={{ fontFamily: 'var(--font-cairo)' }}><Clock className="w-4 h-4" />{t(locale, 'admin.timelineInfo')}</h4>
+                        <div className="space-y-3 mb-6">
+                          {allTimelineEvents.map((ev: any, i: number) => (
+                            <div key={i} className="flex items-start gap-3">
+                              <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 \${i === allTimelineEvents.length - 1 ? 'bg-[#C8A951] text-[#0D1B2A]' : 'bg-[#27AE60] text-white'}`}>{i === allTimelineEvents.length - 1 ? <CircleDot className="w-4 h-4" /> : <Check className="w-4 h-4" />}</div>
+                              <div><p className="text-sm font-bold text-[#1B3A6B]">{locale === 'ar' ? ev.event : ev.eventEn}</p><p className="text-xs text-slate-400">{new Date(ev.date).toLocaleDateString(locale === 'ar' ? 'ar-DZ' : locale)}</p></div>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                          <p className="text-sm font-bold text-[#1B3A6B] mb-3">{t(locale, 'admin.addTimelineEvent')}</p>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                            <div><label className="block text-xs text-slate-500 mb-1">{t(locale, 'admin.timelineEvent')} (AR)</label><input value={timelineEvent} onChange={(e) => setTimelineEvent(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" placeholder={locale === 'ar' ? 'أدخل الحدث بالعربية' : 'Event in Arabic'} /></div>
+                            <div><label className="block text-xs text-slate-500 mb-1">{t(locale, 'admin.timelineEvent')} (EN)</label><input value={timelineEventEn} onChange={(e) => setTimelineEventEn(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" placeholder="Event in English" /></div>
+                          </div>
+                          <button onClick={() => handleAddTimelineEvent(proj.id)} className="px-4 py-2 rounded-xl bg-[#2E7D32] text-white text-sm font-bold flex items-center gap-2 hover:bg-[#1B5E20]"><Plus className="w-4 h-4" />{t(locale, 'admin.addEvent')}</button>
+                        </div>
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
+            ) : (
+              /* Project List */
+              <div className="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-[#F5F7FA]"><tr><th className="px-4 py-3 text-start text-xs font-bold text-slate-500">#</th><th className="px-4 py-3 text-start text-xs font-bold text-slate-500">{t(locale, 'projectSubmit.projectName')}</th><th className="px-4 py-3 text-start text-xs font-bold text-slate-500">{t(locale, 'projectSubmit.ownerName')}</th><th className="px-4 py-3 text-start text-xs font-bold text-slate-500">{t(locale, 'projectSubmit.field')}</th><th className="px-4 py-3 text-start text-xs font-bold text-slate-500">{t(locale, 'common.status')}</th><th className="px-4 py-3 text-start text-xs font-bold text-slate-500">{t(locale, 'admin.score')}</th><th className="px-4 py-3 text-start text-xs font-bold text-slate-500">{t(locale, 'common.actions')}</th></tr></thead>
+                    <tbody className="divide-y divide-slate-100">{allProjects.map((project: any) => { const proj = getProject(project); return (
+                      <tr key={project.id} className="hover:bg-slate-50 transition-colors cursor-pointer" onClick={() => setSelectedProject(project)}>
+                        <td className="px-4 py-3 text-sm font-mono text-slate-400">{proj.refNumber}</td>
+                        <td className="px-4 py-3 text-sm font-bold text-[#1B3A6B]">{locale === 'ar' ? proj.projectName : proj.projectNameEn}</td>
+                        <td className="px-4 py-3 text-sm text-slate-600">{proj.ownerName}</td>
+                        <td className="px-4 py-3"><FieldBadge field={proj.field} locale={locale} /></td>
+                        <td className="px-4 py-3"><StatusBadge status={proj.status} locale={locale} /></td>
+                        <td className="px-4 py-3 text-sm font-bold" style={{ color: proj.score ? (proj.score >= 80 ? '#27AE60' : '#F39C12') : '#9CA3AF' }}>{proj.score || '—'}</td>
+                        <td className="px-4 py-3" onClick={(e: any) => e.stopPropagation()}>
+                          <div className="flex gap-1">
+                            <button onClick={() => { setEvalModal(project.id); setEvalScore(proj.score?.toString() || ''); setEvalNotes(proj.evaluationNotes || ''); }} className="p-1.5 rounded-lg bg-[#1B3A6B]/5 hover:bg-[#1B3A6B]/10 text-[#1B3A6B]" title={t(locale, 'admin.evaluate')}><Edit className="w-3.5 h-3.5" /></button>
+                            {proj.status === 'review' && (<><button onClick={() => handleProjectAction(project.id, 'accept')} className="p-1.5 rounded-lg bg-green-50 hover:bg-green-100 text-green-600"><Check className="w-3.5 h-3.5" /></button><button onClick={() => handleProjectAction(project.id, 'reject')} className="p-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-600"><X className="w-3.5 h-3.5" /></button></>)}
+                            {proj.status === 'accepted' && <button onClick={() => handleProjectAction(project.id, 'incubate')} className="p-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-600"><Rocket className="w-3.5 h-3.5" /></button>}
+                          </div>
+                        </td>
+                      </tr>
+                    ); })}</tbody>
+                  </table>
+                </div>
+              </div>
+            )
+          )}
+
+          {/* ========== USERS TAB - Editable ========== */}
+          {adminTab === 'users' && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-bold text-[#1B3A6B]" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'admin.users')}</h3>
+              {allUsers.map((user: any) => (
+                <div key={user.id} className={`bg-white rounded-2xl p-5 shadow-md border border-slate-100 flex items-center gap-4 transition-all \${!user.active ? 'opacity-60' : ''}`}>
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center font-bold text-white" style={{ backgroundColor: user.role === 'admin' ? '#C8A951' : '#1B3A6B', fontFamily: 'var(--font-cairo)' }}>{user.name.charAt(0)}</div>
+                  <div className="flex-1">
+                    <h4 className="font-bold text-[#1B3A6B]" style={{ fontFamily: 'var(--font-cairo)' }}>{user.name}</h4>
+                    <p className="text-sm text-slate-500">{user.email}</p>
+                    {user.faculty && <p className="text-xs text-slate-400">{t(locale, `faculties.${user.faculty}`)}</p>}
+                  </div>
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold \${user.role === 'admin' ? 'bg-[#C8A951]/10 text-[#C8A951]' : 'bg-[#1B3A6B]/10 text-[#1B3A6B]'}`}>{user.role === 'admin' ? t(locale, 'nav.admin') : t(locale, 'auth.registerBtn')}</span>
+                  <span className={`px-2 py-1 rounded-full text-xs font-bold \${user.active ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>{user.active ? t(locale, 'admin.userActive') : t(locale, 'admin.userInactive')}</span>
+                  <button onClick={() => handleEditUser(user.id)} className="p-2 rounded-lg bg-[#1B3A6B]/5 hover:bg-[#1B3A6B]/10 text-[#1B3A6B]"><Edit className="w-4 h-4" /></button>
+                </div>
+              ))}
             </div>
           )}
 
-          {/* Users */}
-          {adminTab === 'users' && (<div className="space-y-4"><h3 className="text-lg font-bold text-[#1B3A6B]" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'admin.users')}</h3>{[{ name: 'أحمد بن علي', email: 'ahmed.benali@univ-alger3.dz', role: 'student', faculty: 'eco', projects: 2 }, { name: 'فاطمة الزهراء مراد', email: 'fatima.mourad@univ-alger3.dz', role: 'student', faculty: 'eco', projects: 1 }, { name: 'سارة حداد', email: 'sara.haddad@univ-alger3.dz', role: 'student', faculty: 'info', projects: 1 }, { name: 'د. علي بوعشة محمد', email: 'a.bouacha@univ-alger3.dz', role: 'admin', faculty: '', projects: 0 }].map((user, i) => (<div key={i} className="bg-white rounded-2xl p-5 shadow-md border border-slate-100 flex items-center gap-4"><div className="w-12 h-12 rounded-xl flex items-center justify-center font-bold text-white" style={{ backgroundColor: user.role === 'admin' ? '#C8A951' : '#1B3A6B', fontFamily: 'var(--font-cairo)' }}>{user.name.charAt(0)}</div><div className="flex-1"><h4 className="font-bold text-[#1B3A6B]" style={{ fontFamily: 'var(--font-cairo)' }}>{user.name}</h4><p className="text-sm text-slate-500">{user.email}</p></div><span className={`px-3 py-1 rounded-full text-xs font-bold ${user.role === 'admin' ? 'bg-[#C8A951]/10 text-[#C8A951]' : 'bg-[#1B3A6B]/10 text-[#1B3A6B]'}`}>{user.role === 'admin' ? t(locale, 'nav.admin') : t(locale, 'auth.registerBtn')}</span></div>))}</div>)}
-
-          {/* Landing Page Management */}
-          {adminTab === 'landing' && (<div className="space-y-6"><h3 className="text-lg font-bold text-[#1B3A6B]" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'admin.landingPage')}</h3>{[{ section: locale === 'ar' ? 'القسم الرئيسي (Hero)' : 'Hero Section', icon: Sparkles }, { section: locale === 'ar' ? 'الإحصائيات' : 'Statistics', icon: BarChart3 }, { section: locale === 'ar' ? 'كيف تعمل الحاضنة' : 'How It Works', icon: Lightbulb }, { section: locale === 'ar' ? 'الخدمات' : 'Services', icon: Zap }, { section: locale === 'ar' ? 'عن الحاضنة' : 'About', icon: Building2 }, { section: locale === 'ar' ? 'الأحداث' : 'Events', icon: Activity }].map((item, i) => (<div key={i} className="bg-white rounded-2xl p-5 shadow-md border border-slate-100"><div className="flex items-center justify-between mb-4"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-xl bg-[#1B3A6B]/5 flex items-center justify-center"><item.icon className="w-5 h-5 text-[#1B3A6B]" /></div><h4 className="font-bold text-[#1B3A6B]" style={{ fontFamily: 'var(--font-cairo)' }}>{item.section}</h4></div><div className="flex gap-2"><button className="p-2 rounded-lg bg-[#1B3A6B]/5 hover:bg-[#1B3A6B]/10 text-[#1B3A6B]"><Edit className="w-4 h-4" /></button><button className="p-2 rounded-lg bg-[#1B3A6B]/5 hover:bg-[#1B3A6B]/10 text-[#1B3A6B]"><ImageIcon className="w-4 h-4" /></button><button className="p-2 rounded-lg bg-[#1B3A6B]/5 hover:bg-[#1B3A6B]/10 text-[#1B3A6B]"><Video className="w-4 h-4" /></button></div></div><div className="space-y-3"><div><label className="block text-xs font-bold text-slate-500 mb-1">{t(locale, 'admin.sectionTitle')} (AR)</label><input className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" defaultValue={item.section} /></div><div className="grid grid-cols-2 gap-3"><div><label className="block text-xs font-bold text-slate-500 mb-1">{t(locale, 'admin.sectionTitle')} (EN)</label><input className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" /></div><div><label className="block text-xs font-bold text-slate-500 mb-1">{t(locale, 'admin.sectionTitle')} (FR)</label><input className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" /></div></div></div></div>))}<button className="px-6 py-3 rounded-xl bg-[#1B3A6B] text-white font-bold hover:bg-[#2952A3] flex items-center gap-2"><Check className="w-4 h-4" />{t(locale, 'common.save')}</button></div>)}
+          {/* ========== LANDING PAGE MANAGEMENT ========== */}
+          {adminTab === 'landing' && (<div className="space-y-6"><h3 className="text-lg font-bold text-[#1B3A6B]" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'admin.landingPage')}</h3>{[{ section: locale === 'ar' ? 'القسم الرئيسي (Hero)' : 'Hero Section', icon: Sparkles }, { section: locale === 'ar' ? 'الإحصائيات' : 'Statistics', icon: BarChart3 }, { section: locale === 'ar' ? 'كيف تعمل الحاضنة' : 'How It Works', icon: Lightbulb }, { section: locale === 'ar' ? 'الخدمات' : 'Services', icon: Zap }, { section: locale === 'ar' ? 'عن الحاضنة' : 'About', icon: Building2 }, { section: locale === 'ar' ? 'الأحداث' : 'Events', icon: Activity }].map((item, i) => (<div key={i} className="bg-white rounded-2xl p-5 shadow-md border border-slate-100"><div className="flex items-center justify-between mb-4"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-xl bg-[#1B3A6B]/5 flex items-center justify-center"><item.icon className="w-5 h-5 text-[#1B3A6B]" /></div><h4 className="font-bold text-[#1B3A6B]" style={{ fontFamily: 'var(--font-cairo)' }}>{item.section}</h4></div><div className="flex gap-2"><button className="p-2 rounded-lg bg-[#1B3A6B]/5 hover:bg-[#1B3A6B]/10 text-[#1B3A6B]"><Edit className="w-4 h-4" /></button><button className="p-2 rounded-lg bg-[#1B3A6B]/5 hover:bg-[#1B3A6B]/10 text-[#1B3A6B]"><ImageIcon className="w-4 h-4" /></button><button className="p-2 rounded-lg bg-[#1B3A6B]/5 hover:bg-[#1B3A6B]/10 text-[#1B3A6B]"><Video className="w-4 h-4" /></button></div></div><div className="space-y-3"><div><label className="block text-xs font-bold text-slate-500 mb-1">{t(locale, 'admin.sectionTitle')} (AR)</label><input className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" defaultValue={item.section} /></div><div className="grid grid-cols-2 gap-3"><div><label className="block text-xs font-bold text-slate-500 mb-1">{t(locale, 'admin.sectionTitle')} (EN)</label><input className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" /></div><div><label className="block text-xs font-bold text-slate-500 mb-1">{t(locale, 'admin.sectionTitle')} (FR)</label><input className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" /></div></div></div></div>))}
+              {/* Hero Images Management */}
+              <div className="bg-white rounded-2xl p-5 shadow-md border border-slate-100">
+                <h4 className="font-bold text-[#1B3A6B] mb-4 flex items-center gap-2" style={{ fontFamily: 'var(--font-cairo)' }}><ImageIcon className="w-5 h-5" />{t(locale, 'admin.landingImages')}</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {adminSettings.heroImages.map((img, i) => (
+                    <div key={i} className="relative rounded-xl overflow-hidden border border-slate-200 group">
+                      <img src={img} alt={`Hero ${i + 1}`} className="w-full h-32 object-cover" />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <button className="px-3 py-1.5 rounded-lg bg-white text-[#1B3A6B] text-xs font-bold">{t(locale, 'admin.changeImage')}</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <button className="px-6 py-3 rounded-xl bg-[#1B3A6B] text-white font-bold hover:bg-[#2952A3] flex items-center gap-2"><Check className="w-4 h-4" />{t(locale, 'common.save')}</button>
+            </div>)}
 
           {/* Messages */}
           {adminTab === 'messages' && (<div className="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden"><div className="p-4 border-b border-slate-200"><h3 className="font-bold text-[#1B3A6B]" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'admin.messages')}</h3></div><MessagingPanel locale={locale} userId="admin-001" userRole="admin" otherPartyName={locale === 'ar' ? 'أحمد بن علي (طالب)' : 'Ahmed Ben Ali (Student)'} /></div>)}
@@ -1330,6 +1983,68 @@ function AdminDashboard({ locale }: { locale: Locale }) {
               </div>
             </div>
           )}
+
+          {/* ========== SETTINGS TAB ========== */}
+          {adminTab === 'settings' && (
+            <div className="space-y-6 max-w-3xl">
+              {/* Account Settings */}
+              <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100">
+                <h3 className="text-lg font-bold text-[#1B3A6B] mb-4 flex items-center gap-2" style={{ fontFamily: 'var(--font-cairo)' }}><Shield className="w-5 h-5" />{t(locale, 'admin.accountSettings')}</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'admin.currentEmail')}</label>
+                    <input type="email" value={adminSettings.adminEmail} onChange={(e) => setAdminSettings({ ...adminSettings, adminEmail: e.target.value })} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm" />
+                  </div>
+                  <div className="border-t border-slate-100 pt-4">
+                    <h4 className="font-bold text-slate-700 mb-3 flex items-center gap-2"><Shield className="w-4 h-4" />{t(locale, 'student.changePassword')}</h4>
+                    <div className="space-y-3">
+                      <div><label className="block text-xs text-slate-500 mb-1">{t(locale, 'student.currentPassword')}</label><input type="password" value={settingsPassword} onChange={(e) => setSettingsPassword(e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm" /></div>
+                      <div><label className="block text-xs text-slate-500 mb-1">{t(locale, 'student.newPassword')}</label><input type="password" value={settingsNewPassword} onChange={(e) => setSettingsNewPassword(e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm" /></div>
+                      <div><label className="block text-xs text-slate-500 mb-1">{t(locale, 'student.confirmPassword')}</label><input type="password" value={settingsConfirmPassword} onChange={(e) => setSettingsConfirmPassword(e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm" /></div>
+                      <button onClick={handleChangeAdminPassword} className="px-4 py-2.5 rounded-xl bg-[#2E7D32] text-white font-bold text-sm flex items-center gap-2 hover:bg-[#1B5E20]"><Shield className="w-4 h-4" />{t(locale, 'student.changePassword')}</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Platform Settings */}
+              <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100">
+                <h3 className="text-lg font-bold text-[#1B3A6B] mb-4 flex items-center gap-2" style={{ fontFamily: 'var(--font-cairo)' }}><Building2 className="w-5 h-5" />{t(locale, 'admin.platformSettings')}</h3>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div><label className="block text-xs font-bold text-slate-500 mb-1">{t(locale, 'admin.platformName')} (AR)</label><input value={adminSettings.platformNameAr} onChange={(e) => setAdminSettings({ ...adminSettings, platformNameAr: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" /></div>
+                    <div><label className="block text-xs font-bold text-slate-500 mb-1">{t(locale, 'admin.platformName')} (EN)</label><input value={adminSettings.platformNameEn} onChange={(e) => setAdminSettings({ ...adminSettings, platformNameEn: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" /></div>
+                    <div><label className="block text-xs font-bold text-slate-500 mb-1">{t(locale, 'admin.platformName')} (FR)</label><input value={adminSettings.platformNameFr} onChange={(e) => setAdminSettings({ ...adminSettings, platformNameFr: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" /></div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div><label className="block text-xs font-bold text-slate-500 mb-1">{t(locale, 'admin.contactInfo')} — Email</label><input value={adminSettings.contactEmail} onChange={(e) => setAdminSettings({ ...adminSettings, contactEmail: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" /></div>
+                    <div><label className="block text-xs font-bold text-slate-500 mb-1">{t(locale, 'admin.contactInfo')} — Phone</label><input value={adminSettings.contactPhone} onChange={(e) => setAdminSettings({ ...adminSettings, contactPhone: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" /></div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Notification Settings */}
+              <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100">
+                <h3 className="text-lg font-bold text-[#1B3A6B] mb-4 flex items-center gap-2" style={{ fontFamily: 'var(--font-cairo)' }}><Bell className="w-5 h-5" />{t(locale, 'admin.notificationSettings')}</h3>
+                <div className="space-y-3">
+                  {[
+                    { key: 'notifyNewProject', label: t(locale, 'admin.notifyOnNewProject') },
+                    { key: 'notifyProjectStatus', label: t(locale, 'admin.notifyOnStatusChange') },
+                    { key: 'notifyMessage', label: t(locale, 'admin.notifyOnMessage') },
+                  ].map((item) => (
+                    <div key={item.key} className="flex items-center justify-between p-3 rounded-xl bg-slate-50">
+                      <span className="text-sm font-medium text-slate-700">{item.label}</span>
+                      <button onClick={() => setAdminSettings({ ...adminSettings, [item.key]: !(adminSettings as any)[item.key] })} className={`w-12 h-6 rounded-full transition-all \${(adminSettings as any)[item.key] ? 'bg-[#2E7D32]' : 'bg-slate-300'}`}>
+                        <div className={`w-5 h-5 rounded-full bg-white shadow-sm transition-transform \${(adminSettings as any)[item.key] ? 'translate-x-6' : 'translate-x-0.5'}`} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <button onClick={handleSaveSettings} className="px-6 py-3 rounded-xl bg-[#1B3A6B] text-white font-bold hover:bg-[#2952A3] flex items-center gap-2"><Check className="w-4 h-4" />{t(locale, 'common.save')}</button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -1344,12 +2059,36 @@ function AdminDashboard({ locale }: { locale: Locale }) {
                 <div><label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'admin.notes')}</label><textarea value={evalNotes} onChange={(e) => setEvalNotes(e.target.value)} rows={3} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none resize-none" /></div>
                 <div className="grid grid-cols-2 gap-3">
                   {[['accept', 'bg-green-600 hover:bg-green-700', Check], ['revision', 'bg-amber-600 hover:bg-amber-700', RefreshCw], ['incubate', 'bg-emerald-600 hover:bg-emerald-700', Rocket], ['reject', 'bg-red-600 hover:bg-red-700', X]].map(([action, color, Icon]) => (
-                    <button key={action} onClick={() => handleProjectAction(evalModal!, action)} className={`px-4 py-2.5 rounded-xl text-white font-bold text-sm flex items-center justify-center gap-2 transition-all ${color}`}>
+                    <button key={action as string} onClick={() => handleProjectAction(evalModal!, action as string)} className={`px-4 py-2.5 rounded-xl text-white font-bold text-sm flex items-center justify-center gap-2 transition-all \${color}`}>
                       {React.createElement(Icon as any, { className: 'w-4 h-4' })}{t(locale, `admin.${action}`)}
                     </button>
                   ))}
                 </div>
                 <button onClick={() => setEvalModal(null)} className="w-full py-2.5 rounded-xl border-2 border-slate-200 text-slate-600 font-bold mt-2">{t(locale, 'common.cancel')}</button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Edit User Modal */}
+      <AnimatePresence>
+        {editUserModal && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setEditUserModal(null)}>
+            <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }} className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl" onClick={(e) => e.stopPropagation()}>
+              <h3 className="text-lg font-bold text-[#1B3A6B] mb-4" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'admin.editUser')}</h3>
+              <div className="space-y-3">
+                <div><label className="block text-xs font-bold text-slate-500 mb-1">{t(locale, 'auth.name')}</label><input value={editUserName} onChange={(e) => setEditUserName(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" /></div>
+                <div><label className="block text-xs font-bold text-slate-500 mb-1">{t(locale, 'auth.email')}</label><input value={editUserEmail} onChange={(e) => setEditUserEmail(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" /></div>
+                <div><label className="block text-xs font-bold text-slate-500 mb-1">{t(locale, 'auth.phone')}</label><input value={editUserPhone} onChange={(e) => setEditUserPhone(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" /></div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div><label className="block text-xs font-bold text-slate-500 mb-1">{t(locale, 'admin.userRole')}</label><select value={editUserRole} onChange={(e) => setEditUserRole(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm bg-white"><option value="student">{t(locale, 'auth.registerBtn')}</option><option value="admin">{t(locale, 'nav.admin')}</option></select></div>
+                  <div><label className="block text-xs font-bold text-slate-500 mb-1">{t(locale, 'common.status')}</label><select value={editUserActive ? 'active' : 'inactive'} onChange={(e) => setEditUserActive(e.target.value === 'active')} className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm bg-white"><option value="active">{t(locale, 'admin.userActive')}</option><option value="inactive">{t(locale, 'admin.userInactive')}</option></select></div>
+                </div>
+                <div className="flex gap-2 pt-2">
+                  <button onClick={handleSaveUser} className="flex-1 px-4 py-2.5 rounded-xl bg-[#1B3A6B] text-white font-bold text-sm">{t(locale, 'common.save')}</button>
+                  <button onClick={() => setEditUserModal(null)} className="flex-1 px-4 py-2.5 rounded-xl border-2 border-slate-200 text-slate-600 font-bold text-sm">{t(locale, 'common.cancel')}</button>
+                </div>
               </div>
             </motion.div>
           </motion.div>
