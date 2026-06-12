@@ -3,55 +3,49 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>أداة دراسة المشروع — INC ALG 3 — حاضنة أعمال جامعة الجزائر 3</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <title>مولد الجداول المالية ونموذج الأعمال التجاري BMC — McKinsey PDF</title>
   <style>
     :root{
-      --bg:#f0f4f9;
+      --bg:#f4f7fb;
       --card:#ffffff;
       --text:#111827;
       --muted:#6b7280;
-      --primary:#1B3A6B;
-      --primary-dark:#0D1B2A;
-      --accent:#C8A951;
-      --accent-light:#E4C97A;
-      --green:#2E7D32;
+      --primary:#1e3a5f;
+      --primary-dark:#0f172a;
+      --border:#dbe3ef;
+      --soft:#eff6ff;
+      --green:#166534;
       --red:#991b1b;
       --yellow:#92400e;
-      --border:#d0dbe8;
-      --soft:#eef3fb;
-      --shadow:0 16px 45px rgba(13,27,42,.1);
-      --ui-font:'Tajawal','Cairo',Tahoma,Arial,sans-serif;
+      --shadow:0 16px 45px rgba(15,23,42,.08);
+      --ui-font:Tahoma,Arial,sans-serif;
     }
     *{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact}
     body{margin:0;background:var(--bg);color:var(--text);font-family:var(--ui-font);line-height:1.7}
     button,input,select,textarea{font-family:inherit}
-    header{padding:35px 16px 70px;background:linear-gradient(135deg,#0D1B2A 0%,#1B3A6B 50%,#0F2140 100%);color:#fff;text-align:center;position:relative;overflow:hidden}
-    header h1{margin:0 0 8px;font-size:clamp(22px,4vw,38px);font-family:'Cairo','Tajawal',sans-serif;font-weight:900}
-    header p{margin:0;color:#E4C97A;font-weight:700}
-    .header-kicker{display:inline-block;margin-bottom:10px;padding:8px 18px;border:1px solid rgba(200,169,81,.4);border-radius:999px;color:#E4C97A;font-weight:900;font-size:14px;background:rgba(200,169,81,.08);letter-spacing:0.5px}
+    header{padding:30px 16px 64px;background:linear-gradient(135deg,#0f172a,var(--primary));color:#fff;text-align:center}
+    header h1{margin:0 0 8px;font-size:clamp(24px,4vw,40px)}
+    header p{margin:0;color:#dbeafe}
+    .header-kicker{display:inline-block;margin-bottom:8px;padding:6px 12px;border:1px solid rgba(255,255,255,.35);border-radius:999px;color:#e0f2fe;font-weight:800;font-size:14px}
     .app{width:min(1280px,calc(100% - 28px));margin:-44px auto 50px}
-    .brand-strip{background:#fff;border:1px solid var(--border);border-radius:24px;box-shadow:var(--shadow);padding:22px 28px;margin-bottom:14px;display:flex;align-items:center;justify-content:center;gap:24px;text-align:center;overflow:hidden;border-top:3px solid var(--accent)}
+    .brand-strip{background:#fff;border:1px solid var(--border);border-radius:24px;box-shadow:var(--shadow);padding:18px 22px;margin-bottom:14px;display:flex;align-items:center;justify-content:center;gap:20px;text-align:center;overflow:hidden}
     .brand-mark{width:270px;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;flex:0 0 auto;overflow:visible;background:transparent}.brand-mark img{width:100%;height:100%;object-fit:contain;border-radius:18px;box-shadow:0 4px 12px rgba(0,0,0,0.1)}.brand-fallback{text-align:center;font-weight:800;color:var(--muted);padding:20px;border:2px dashed var(--border);border-radius:16px;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:16px;line-height:1.4}
     .brand-copy{max-width:760px}
-    .brand-strip h2{margin:0;font-size:25px;color:var(--primary);line-height:1.35;font-family:'Cairo','Tajawal',sans-serif}
+    .brand-strip h2{margin:0;font-size:25px;color:var(--primary);line-height:1.35}
     .brand-strip h3{margin:4px 0 0;font-size:18px;color:#0f172a;line-height:1.5}
     .brand-strip p{margin:5px 0 0;color:#374151;font-weight:800}
     .privacy-banner{background:#ecfdf5;border:1px solid #bbf7d0;color:#166534;border-radius:18px;padding:11px 14px;margin-bottom:10px;text-align:center;font-weight:800}.assist-banner{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:18px;padding:12px 14px;margin-bottom:14px;text-align:center;font-weight:800}
     .rights-line{color:#64748b;text-align:center;font-size:13px;font-weight:800;margin:-4px 0 14px}
     .toolbar{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:16px}
-    .btn{border:0;border-radius:14px;padding:11px 16px;background:var(--primary);color:#fff;font-weight:800;cursor:pointer;transition:all .2s}
-    .btn:hover{background:#2952A3;transform:translateY(-1px);box-shadow:0 4px 12px rgba(27,58,107,.3)}
+    .btn{border:0;border-radius:14px;padding:11px 16px;background:var(--primary);color:#fff;font-weight:800;cursor:pointer}
     .lang-select{border:1px solid var(--border);border-radius:14px;padding:10px 14px;background:#fff;color:#111827;font-weight:800;min-width:140px}
-    .btn:hover{background:#2952A3;transform:translateY(-1px);box-shadow:0 4px 12px rgba(27,58,107,.3)}
+    .btn:hover{filter:brightness(.96)}
     .btn.red{background:#b91c1c}.btn.ghost{background:#fff;color:var(--text);border:1px solid var(--border)}.btn.small{padding:8px 11px;font-size:13px}
     .layout{display:grid;grid-template-columns:300px 1fr;gap:18px}
-    .steps{background:var(--card);border:1px solid var(--border);border-radius:24px;box-shadow:var(--shadow);padding:16px;position:sticky;top:14px;height:max-content;border-top:3px solid var(--accent)}
+    .steps{background:var(--card);border:1px solid var(--border);border-radius:24px;box-shadow:var(--shadow);padding:16px;position:sticky;top:14px;height:max-content}
     .step-tab{display:flex;align-items:center;gap:10px;width:100%;border:0;background:transparent;text-align:right;padding:12px;border-radius:14px;cursor:pointer;color:var(--muted);font-weight:800}
-    .step-tab.active{background:linear-gradient(135deg,rgba(27,58,107,.08),rgba(200,169,81,.08));color:var(--primary);border:1px solid rgba(200,169,81,.2)}.step-tab.done{color:var(--green)}
-    .panel{background:var(--card);border:1px solid var(--border);border-radius:24px;box-shadow:var(--shadow);padding:24px;border-top:3px solid var(--accent)}
+    .step-tab.active{background:var(--soft);color:var(--primary)}.step-tab.done{color:var(--green)}
+    .panel{background:var(--card);border:1px solid var(--border);border-radius:24px;box-shadow:var(--shadow);padding:24px}
     .step{display:none}.step.active{display:block}
     h2{margin:0 0 16px;font-size:24px}h3{margin:22px 0 10px}.muted{color:var(--muted);font-size:14px}.hidden{display:none!important}
     .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
@@ -62,15 +56,15 @@
     .choice-row{display:flex;flex-wrap:wrap;gap:10px}.choice{display:flex;align-items:center;gap:8px;padding:11px 13px;border:1px solid var(--border);background:#f9fafb;border-radius:999px;cursor:pointer;font-weight:800}.choice input{width:auto}
     .item{border:1px solid var(--border);background:#fbfdff;border-radius:20px;padding:16px;margin:12px 0}.nav{display:flex;justify-content:space-between;gap:10px;margin-top:22px}
     .alert{padding:12px 14px;border-radius:16px;margin:12px 0;border:1px solid}.alert.red{background:#fee2e2;color:#991b1b;border-color:#fecaca}.alert.yellow{background:#fef3c7;color:#92400e;border-color:#fde68a}.alert.green{background:#dcfce7;color:#166534;border-color:#bbf7d0}.alert.blue{background:#dbeafe;color:#1e40af;border-color:#bfdbfe}
-    .financial-note{background:linear-gradient(135deg,#f8fafc,#f1f5f9);border-right:4px solid var(--accent);padding:10px 12px;margin:10px 0;color:#334155;border-radius:10px}.appendix-title{background:linear-gradient(135deg,#eef2ff,#f0f4f9);border-right:6px solid var(--accent);padding:10px 14px;border-radius:12px;color:var(--primary);font-weight:900;margin-top:28px}
+    .financial-note{background:#f8fafc;border-right:4px solid var(--primary);padding:10px 12px;margin:10px 0;color:#334155;border-radius:10px}.appendix-title{background:#eef2ff;border-right:6px solid var(--primary);padding:10px 14px;border-radius:12px;color:var(--primary);font-weight:900;margin-top:28px}
     .report-intro{border:1px solid var(--border);border-radius:22px;background:#fff;padding:22px;margin-bottom:18px;box-shadow:0 8px 24px rgba(15,23,42,.06)}
     .report-intro h1{font-size:26px;margin:0 0 8px;color:var(--primary);text-align:center}.report-intro .subtitle{text-align:center;color:#374151;font-weight:800;margin-bottom:16px}
     .info-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.info-card{border:1px solid #e5e7eb;border-radius:14px;padding:10px;background:#f8fafc}.info-card span{display:block;font-size:12px;color:#64748b}.info-card strong{display:block;font-size:15px;color:#111827}
     .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}.kpi{background:var(--soft);border:1px solid #dbeafe;border-radius:20px;padding:16px}.kpi span{color:var(--muted);font-size:14px}.kpi strong{display:block;font-size:20px;margin-top:6px}
     .verdict{font-size:21px;font-weight:900;text-align:center;border-radius:18px;padding:18px;margin:16px 0}
-    .table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;margin:12px 0;min-width:760px;background:#fff;border-radius:12px;overflow:hidden}th,td{border:1px solid #dbe3ef;padding:10px;text-align:center;font-size:14px}th{background:var(--primary)!important;color:#fff!important;font-weight:900}tbody tr:nth-child(even) td{background:#f8fafc!important}.section-row td{background:linear-gradient(135deg,#e0f2fe,#dbeafe)!important;color:var(--primary)!important;font-weight:900}.subtotal-row td{background:#dbeafe!important;color:var(--primary)!important;font-weight:900}.total-row td{background:var(--primary-dark)!important;color:var(--accent-light)!important;font-weight:900}.negative{color:#991b1b!important;font-weight:900}.positive{color:var(--green)!important;font-weight:900}
+    .table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;margin:12px 0;min-width:760px;background:#fff;border-radius:12px;overflow:hidden}th,td{border:1px solid #dbe3ef;padding:10px;text-align:center;font-size:14px}th{background:#1e3a5f!important;color:#fff!important;font-weight:900}tbody tr:nth-child(even) td{background:#f8fafc!important}.section-row td{background:#e0f2fe!important;color:#075985;font-weight:900}.subtotal-row td{background:#dbeafe!important;color:#1e3a5f;font-weight:900}.total-row td{background:#0f172a!important;color:#fff!important;font-weight:900}.negative{color:#991b1b!important;font-weight:900}.positive{color:#166534!important;font-weight:900}
     canvas{width:100%;max-height:320px;border:1px solid var(--border);border-radius:18px;background:#fff;margin-top:12px}
-    .bmc{display:grid;grid-template-columns:1fr 1fr 1.25fr 1fr 1fr;grid-template-rows:minmax(240px,auto) minmax(240px,auto) minmax(185px,auto);grid-template-areas:"partners activities value relationships customers" "partners resources value channels customers" "costs costs costs revenue revenue";gap:8px;direction:ltr;background:var(--primary-dark);padding:8px;border-radius:18px;margin-top:12px}.bmc-box{direction:rtl;border:0;border-radius:10px;padding:12px;background:#fff;min-height:160px;overflow:visible;word-break:break-word}
+    .bmc{display:grid;grid-template-columns:1fr 1fr 1.25fr 1fr 1fr;grid-template-rows:minmax(240px,auto) minmax(240px,auto) minmax(185px,auto);grid-template-areas:"partners activities value relationships customers" "partners resources value channels customers" "costs costs costs revenue revenue";gap:8px;direction:ltr;background:#111827;padding:8px;border-radius:18px;margin-top:12px}.bmc-box{direction:rtl;border:0;border-radius:10px;padding:12px;background:#fff;min-height:160px;overflow:visible;word-break:break-word}
     html[dir="ltr"] .bmc-box{direction:ltr;text-align:left}.bmc-box strong{display:block;margin-bottom:8px;color:var(--primary);font-size:14px;border-bottom:1px solid #e5e7eb;padding-bottom:5px}.bmc-box div{font-size:12.2px;line-height:1.55}
     body.pdf-mode{background:#fff!important}
     body.pdf-mode .app{width:100%!important;margin:0!important}
@@ -95,9 +89,9 @@
     body.pdf-mode .bmc-section{page-break-before:always!important;break-before:page!important}
     body.pdf-mode .bmc{grid-template-columns:1fr 1fr 1.25fr 1fr 1fr!important;grid-template-rows:minmax(165px,auto) minmax(165px,auto) minmax(115px,auto)!important;gap:5px!important;padding:5px!important;border-radius:12px!important}
     body.pdf-mode .bmc-box{padding:7px!important;min-height:auto!important;border-radius:8px!important}.pdf-mode .bmc-box strong{font-size:9px!important;margin-bottom:4px!important;padding-bottom:3px!important}.pdf-mode .bmc-box div{font-size:7.8px!important;line-height:1.25!important}
-    body.pdf-mode .summary-card h3{font-size:17px!important}.pdf-mode .summary-card p{font-size:11px!important}.bmc-partners{grid-area:partners}.bmc-activities{grid-area:activities}.bmc-resources{grid-area:resources}.bmc-value{grid-area:value;background:linear-gradient(135deg,#eff6ff,#fefce8)}.bmc-relationships{grid-area:relationships}.bmc-channels{grid-area:channels}.bmc-customers{grid-area:customers}.bmc-costs{grid-area:costs;background:linear-gradient(135deg,#fff7ed,#fef3c7)}.bmc-revenue{grid-area:revenue;background:linear-gradient(135deg,#f0fdf4,#dcfce7)}
+    body.pdf-mode .summary-card h3{font-size:17px!important}.pdf-mode .summary-card p{font-size:11px!important}.bmc-partners{grid-area:partners}.bmc-activities{grid-area:activities}.bmc-resources{grid-area:resources}.bmc-value{grid-area:value;background:#eff6ff}.bmc-relationships{grid-area:relationships}.bmc-channels{grid-area:channels}.bmc-customers{grid-area:customers}.bmc-costs{grid-area:costs;background:#fff7ed}.bmc-revenue{grid-area:revenue;background:#f0fdf4}
 
-    .mindset-box{background:linear-gradient(135deg,rgba(27,58,107,.05),rgba(200,169,81,.05));border:1px solid rgba(200,169,81,.3);color:var(--primary);border-radius:18px;padding:13px 15px;margin:12px 0 16px;font-weight:800;line-height:1.7}
+    .mindset-box{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;border-radius:18px;padding:13px 15px;margin:12px 0 16px;font-weight:800;line-height:1.7}
     .explanations-box{margin:18px 0;padding:16px;border:1px solid #dbe3ef;border-radius:18px;background:#f8fafc}
     .explanations-box h3{margin:0 0 12px;color:var(--primary)}
     .explain-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
@@ -132,7 +126,7 @@
     body.pdf-mode .appendix-explain{font-size:9px!important;line-height:1.35!important;padding:6px 8px!important;margin:5px 0!important;border-radius:8px!important}
     @media(max-width:950px){.explain-grid{grid-template-columns:1fr}.layout{grid-template-columns:1fr}.steps{position:static}.col-8,.col-6,.col-4,.col-3,.col-2{grid-column:span 12}.kpis{grid-template-columns:1fr}.info-grid{grid-template-columns:1fr}.bmc{display:block;background:transparent;padding:0}.bmc-box{margin-bottom:10px;border:1px solid var(--border)}.brand-strip{flex-direction:column}.brand-mark{width:220px}.brand-strip h2{font-size:21px}.brand-strip h3{font-size:16px}}
 
-    .auto-plan-box{border:1px solid rgba(200,169,81,.2);background:linear-gradient(135deg,rgba(27,58,107,.02),rgba(200,169,81,.04));border-radius:20px;padding:16px;margin:14px 0}
+    .auto-plan-box{border:1px solid #bfdbfe;background:#eff6ff;border-radius:20px;padding:16px;margin:14px 0}
     .auto-plan-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px}
     .auto-plan-head h3{margin:0;color:#1e3a5f}.auto-plan-head p{margin:4px 0 0;color:#475569;font-size:13px}
     .percent-total{font-weight:900;border-radius:12px;padding:10px 12px;background:#fff;border:1px solid #dbe3ef;min-width:140px;text-align:center}
@@ -162,7 +156,7 @@ body.pdf-mode .report-intro{
   background:#fff!important;
 }
 body.pdf-mode .report-intro:before{
-  content:"INC ALG 3 — حاضنة أعمال جامعة الجزائر 3";
+  content:"حاضنة الأعمال - جامعة سوق أهراس";
   display:block;
   text-align:center;
   font-weight:900;
@@ -265,37 +259,26 @@ body.pdf-mode{font-family:Tahoma,Arial,sans-serif!important;color:#0f172a!import
 </head>
 <body>
 <header>
-  <div style="position:absolute;inset:0;opacity:.05;background-image:radial-gradient(circle at 2px 2px,#C8A951 1px,transparent 0);background-size:40px 40px;pointer-events:none"></div>
-  <div class="header-kicker" id="mainKicker">INC ALG 3 — القرار الوزاري 1275 المعدل والمتمم</div>
-  <h1 id="mainTitle">أداة دراسة المشروع المالي</h1>
-  <p id="mainSubtitle">حاضنة أعمال جامعة الجزائر 3 — إبراهيم سلطان شيبوط</p>
-  <div style="margin-top:12px;display:flex;justify-content:center;gap:8px">
-    <span style="display:inline-block;padding:4px 14px;border-radius:999px;background:rgba(200,169,81,.15);color:#E4C97A;font-weight:900;font-size:12px">INC ALG 3</span>
-    <span style="display:inline-block;padding:4px 14px;border-radius:999px;background:rgba(46,125,50,.15);color:#86efac;font-weight:900;font-size:12px">Université d'Alger 3</span>
-  </div>
+  <div class="header-kicker" id="mainKicker">مذكرة تخرج مشروع مؤسسة اقتصادية - القرار 1275 المعدل والمتمم</div>
+  <h1 id="mainTitle">مولد الجداول المالية ونموذج الأعمال التجاري BMC</h1>
+  <p id="mainSubtitle">أداة موجهة لإعداد الملاحق المالية ونموذج الأعمال التجاري للمشاريع الجامعية</p>
 </header>
-<div style="height:3px;background:linear-gradient(90deg,transparent,#C8A951,#E4C97A,#C8A951,transparent)"></div>
 <main class="app">
   <div class="brand-strip no-print">
     <div class="brand-mark">
       <img src="incubator-logo.jpeg" alt="شعار حاضنة الأعمال" onerror="this.style.display='none'; document.getElementById('logoFallback').style.display='flex';">
-      <div id="logoFallback" class="brand-fallback" style="display:none;background:linear-gradient(135deg,#0D1B2A,#1B3A6B);color:#E4C97A;border:2px solid #C8A951;font-size:18px;font-family:'Cairo','Tajawal',sans-serif;border-radius:20px;">
-        <div style="text-align:center;line-height:1.5">
-          <div style="font-size:32px;font-weight:900;letter-spacing:2px">INC ALG 3</div>
-          <div style="font-size:11px;color:#E4C97A;margin-top:4px;font-weight:700">حاضنة أعمال جامعة الجزائر 3</div>
-        </div>
-      </div>
+      <div id="logoFallback" class="brand-fallback" style="display:none;">حاضنة الأعمال - جامعة سوق أهراس</div>
     </div>
     <div class="brand-copy">
-      <h2 id="brandName">INC ALG 3 — حاضنة أعمال جامعة الجزائر 3</h2>
-      <h3 id="brandToolName">أداة دراسة المشروع المالي ونموذج الأعمال BMC</h3>
-      <p id="brandDecision">القرار الوزاري 1275 المعدل والمتمم</p>
-      <p id="brandSlogan">من ثروة الأرض النادرة إلى ثروة الأفكار — حاضنة أعمال جامعة الجزائر 3</p>
+      <h2 id="brandName">حاضنة الأعمال - جامعة سوق أهراس</h2>
+      <h3 id="brandToolName">مولد الجداول المالية ونموذج الأعمال التجاري BMC</h3>
+      <p id="brandDecision">مذكرة تخرج مشروع مؤسسة اقتصادية - القرار 1275 المعدل والمتمم</p>
+      <p id="brandSlogan">نحن نرعى أفكاركم اليوم لتصبح مشروعاً رائداً في الغد</p>
     </div>
   </div>
-  <div class="privacy-banner no-print" id="privacyBanner">الأداة تعمل محلياً داخل المتصفح ولا تحفظ الأرقام أو بيانات المشروع أو ترسلها لأي جهة — INC ALG 3</div>
-  <div class="assist-banner no-print" id="assistBanner">نعلم جميع الطلبة أن الأداة الرقمية الخاصة بالخطة المالية ونموذج الأعمال BMC هي أداة مساعدة فقط، وُضعت لتسهيل العمل الأولي وتسريع إعداد المشروع، وتعتمد نتائجها على دقة وصحة المعلومات المدخلة.</div>
-  <div class="rights-line no-print" id="rightsLine">جميع الحقوق محفوظة © INC ALG 3 — حاضنة أعمال جامعة الجزائر 3</div>
+  <div class="privacy-banner no-print" id="privacyBanner">🔒 الأداة تعمل محلياً داخل المتصفح ولا تحفظ الأرقام أو بيانات المشروع أو ترسلها لأي جهة.</div>
+  <div class="assist-banner no-print" id="assistBanner">📌 نعلم جميع الطلبة أن الأداة الرقمية الخاصة بالخطة المالية ونموذج الأعمال BMC هي أداة مساعدة فقط، وُضعت لتسهيل العمل الأولي وتسريع إعداد المشروع، وتعتمد نتائجها على دقة وصحة المعلومات المدخلة.</div>
+  <div class="rights-line no-print" id="rightsLine">جميع الحقوق محفوظة © حاضنة الأعمال - جامعة سوق أهراس</div>
   <div class="toolbar no-print">
     <select id="languageSelect" class="lang-select" onchange="setLanguage(this.value)">
       <option value="ar">العربية</option>
@@ -318,7 +301,7 @@ body.pdf-mode{font-family:Tahoma,Arial,sans-serif!important;color:#0f172a!import
           <div class="col-4"><label>عنوان المشروع بالعربية</label><input id="projectTitleAr"></div>
           <div class="col-4"><label>عنوان المشروع بالإنجليزية</label><input id="projectTitleEn"></div>
           <div class="col-4"><label>الاسم التجاري للمؤسسة</label><input id="tradeName"></div>
-          <div class="col-4"><label>اسم الجامعة</label><input id="university" value="جامعة الجزائر 3 — إبراهيم سلطان شيبوط"></div>
+          <div class="col-4"><label>اسم الجامعة</label><input id="university" value="جامعة سوق أهراس"></div>
           <div class="col-4"><label>الكلية / المعهد</label><input id="faculty"></div>
           <div class="col-4"><label>القسم</label><input id="department"></div>
           <div class="col-4"><label>المستوى والتخصص</label><input id="levelSpecialty"></div>
@@ -489,16 +472,16 @@ let currentLang='ar';
 const I18N={
   ar:{
     dir:'rtl', lang:'ar',
-    kicker:'INC ALG 3 — القرار الوزاري 1275 المعدل والمتمم',
+    kicker:'مذكرة تخرج مشروع مؤسسة اقتصادية - القرار 1275 المعدل والمتمم',
     title:'مولد الجداول المالية ونموذج الأعمال التجاري — BMC',
     subtitle:'أداة موجهة لإعداد الملاحق المالية ونموذج الأعمال التجاري للمشاريع الجامعية',
-    brandName:'INC ALG 3 — حاضنة أعمال جامعة الجزائر 3',
-    toolName:'أداة دراسة المشروع المالي ونموذج الأعمال BMC',
+    brandName:'حاضنة الأعمال - جامعة سوق أهراس',
+    toolName:'مولد الجداول المالية ونموذج الأعمال التجاري — BMC',
     decision:'مذكرة تخرج مشروع مؤسسة اقتصادية - القرار 1275 المعدل والمتمم',
-    slogan:'من ثروة الأرض النادرة إلى ثروة الأفكار — حاضنة أعمال جامعة الجزائر 3',
+    slogan:'نحن نرعى أفكاركم اليوم لتصبح مشروعاً رائداً في الغد',
     privacy:'🔒 الأداة تعمل محلياً داخل المتصفح ولا تحفظ الأرقام أو بيانات المشروع أو ترسلها لأي جهة.',
     assist:'📌 نعلم جميع الطلبة أن الأداة الرقمية الخاصة بالخطة المالية ونموذج الأعمال BMC هي أداة مساعدة فقط، وُضعت لتسهيل العمل الأولي وتسريع إعداد المشروع، وتعتمد نتائجها على دقة وصحة المعلومات المدخلة.',
-    rights:'جميع الحقوق محفوظة © INC ALG 3 — حاضنة أعمال جامعة الجزائر 3',
+    rights:'جميع الحقوق محفوظة © حاضنة الأعمال - جامعة سوق أهراس',
     generate:'📎 توليد الملاحق', print:'⬇️ تحميل / حفظ PDF', reset:'🗑️ إفراغ البيانات',
     reportTitle:'الملاحق المالية للمشروع',
     reportSubtitle:'مولد الجداول المالية ونموذج الأعمال التجاري — BMC — مذكرة تخرج مشروع مؤسسة اقتصادية - القرار 1275 المعدل والمتمم',
@@ -510,18 +493,18 @@ const I18N={
   fr:{
     dir:'ltr', lang:'fr',
     kicker:'Mémoire de fin d’études — Projet d’entreprise économique — Décision 1275 modifiée et complétée',
-    title:'Outil d'Étude de Projet Financier — INC ALG 3',
-    subtitle:'INC ALG 3 — Incubateur d'affaires — Université d'Alger 3',
-    brandName:'Incubateur d’affaires — Université d'Alger 3 — Ibrahim Sultan Cheibout',
-    toolName:'Outil d'Étude de Projet Financier et BMC — INC ALG 3',
+    title:'Générateur des tableaux financiers et du Business Model Canvas',
+    subtitle:'Outil destiné à préparer les annexes financières et le BMC des projets universitaires',
+    brandName:'Incubateur d’affaires — Université de Souk Ahras',
+    toolName:'Générateur des tableaux financiers et du BMC',
     decision:'Mémoire de fin d’études — Projet d’entreprise économique — Décision 1275 modifiée et complétée',
     slogan:'Nous accompagnons vos idées aujourd’hui pour en faire des projets leaders demain',
     privacy:'🔒 L’outil fonctionne localement dans le navigateur et ne sauvegarde ni les chiffres ni les données du projet.',
     assist:'📌 Cet outil numérique pour le plan financier et le BMC est uniquement un outil d’aide. Il sert à faciliter le travail initial et à accélérer la préparation du projet. Les résultats dépendent de l’exactitude des informations saisies.',
-    rights:'Tous droits réservés © Incubateur d’affaires — Université d'Alger 3 — Ibrahim Sultan Cheibout',
+    rights:'Tous droits réservés © Incubateur d’affaires — Université de Souk Ahras',
     generate:'📎 Générer les annexes', print:'⬇️ Télécharger PDF', reset:'🗑️ Réinitialiser',
     reportTitle:'Annexes financières du projet',
-    reportSubtitle:'Outil d'Étude de Projet Financier et BMC — INC ALG 3 — Mémoire de fin d’études — Projet d’entreprise économique — Décision 1275 modifiée et complétée',
+    reportSubtitle:'Générateur des tableaux financiers et du BMC — Mémoire de fin d’études — Projet d’entreprise économique — Décision 1275 modifiée et complétée',
     stepTabs:['Informations du projet','Type de projet','Produits et services','Charges fixes','Investissement','Financement et fiscalité','Marché et BMC','Annexes'],
     stepHeadings:['1️⃣ Informations du projet','2️⃣ Type de projet et cadre fiscal','3️⃣ Produits et services','4️⃣ Charges fixes de l’entreprise','5️⃣ Investissements et équipements','6️⃣ Financement et fiscalité','7️⃣ Marché et BMC','8️⃣ Annexes financières'],
     infoLabels:['Nom du projet','Nom commercial','Cadre juridique','Nature du projet','Université','Faculté / Institut','Département','Année universitaire'],
@@ -787,18 +770,18 @@ function getSuggestedExemptionInfo(){
   }
   else if(legal.includes('مصغرة')){
     years=5;
-    title=isFr?'Exonération micro-entreprise ANADE — Alger 3':'إعفاء مؤسسة مصغرة ANADE — الجزائر 3';
-    reason=isFr?'À Alger 3, l’outil retient pédagogiquement le plafond de 5 ans, sous réserve de validation administrative.':'في الجزائر 3 يمكن اعتماد الحد الأعلى تعليمياً: 5 سنوات، مع ضرورة التأكد من الملف الإداري.';
+    title=isFr?'Exonération micro-entreprise ANADE — Souk Ahras':'إعفاء مؤسسة مصغرة ANADE — سوق أهراس';
+    reason=isFr?'À Souk Ahras, l’outil retient pédagogiquement le plafond de 5 ans, sous réserve de validation administrative.':'في سوق أهراس يمكن اعتماد الحد الأعلى تعليمياً: 5 سنوات، مع ضرورة التأكد من الملف الإداري.';
   }
   else if(legal.includes('براءة')){
     years=5;
     title=isFr?'Brevet / projet innovant':'براءة اختراع / مشروع مبتكر';
-    reason=isFr?'Le brevet renforce le dossier de Label et soutient la demande d’allègement, surtout dans une wilaya intérieure comme Alger 3.':'البراءة تقوي ملف الـ Label وتدعم طلب الإعفاء، خاصة في ولاية داخلية مثل الجزائر 3.';
+    reason=isFr?'Le brevet renforce le dossier de Label et soutient la demande d’allègement, surtout dans une wilaya intérieure comme Souk Ahras.':'البراءة تقوي ملف الـ Label وتدعم طلب الإعفاء، خاصة في ولاية داخلية مثل سوق أهراس.';
   }
   else {
     years=10;
     title=isFr?'Exonération d’investissement AAPI — zone prioritaire':'إعفاء استثمار AAPI — منطقة ذات أولوية';
-    reason=isFr?'Si le projet est éligible à l’investissement à Alger 3, un scénario d’exonération pouvant atteindre 10 ans peut être présenté en phase d’exploitation.':'إذا كان المشروع مؤهلاً ضمن الاستثمار في الجزائر 3، يمكن عرض سيناريو إعفاء يصل إلى 10 سنوات في مرحلة الاستغلال.';
+    reason=isFr?'Si le projet est éligible à l’investissement à Souk Ahras, un scénario d’exonération pouvant atteindre 10 ans peut être présenté en phase d’exploitation.':'إذا كان المشروع مؤهلاً ضمن الاستثمار في سوق أهراس، يمكن عرض سيناريو إعفاء يصل إلى 10 سنوات في مرحلة الاستغلال.';
   }
   let ibs=isFr?'26% commerce et services':'26% للتجارة والخدمات';
   if(activity==='production') ibs=isFr?'19% production':'19% للإنتاج';
@@ -898,7 +881,7 @@ function renderAICoach(ctx){
       <div class="ai-card"><strong>${isFr?'Pourquoi ?':'لماذا؟'}</strong><ul>${reasons.slice(0,6).map(a=>`<li>${a}</li>`).join('')}</ul></div>
       <div class="ai-card"><strong>${isFr?'Que faire maintenant ?':'ماذا تفعل الآن؟'}</strong><ol>${actions.slice(0,6).map(a=>`<li>${a}</li>`).join('')}</ol></div>
       <div class="ai-card"><strong>${isFr?'Plan de financement':'خطة التمويل'}</strong><ul>${fundingAdvice.map(a=>`<li>${a}</li>`).join('')}</ul></div>
-      <div class="ai-card"><strong>${isFr?'🏛️ Lecture fiscale — Alger 3':'🏛️ قراءة ضريبية — الجزائر 3'}</strong><div>${s.title}</div><div>${isFr?'Exonération proposée':'الإعفاء المقترح'}: <b>${s.years} ${isFr?'ans':'سنوات'}</b></div><div>${isFr?'Après exonération':'بعد الإعفاء'}: <b>${s.ibs}</b></div><div style="margin-top:6px">${isFr?'Ajoutez une recommandation de réinvestir 30% des bénéfices exonérés dans un délai de 4 ans.':'أدرج توصية إعادة استثمار 30% من الأرباح المعفاة خلال 4 سنوات.'}</div></div>
+      <div class="ai-card"><strong>${isFr?'🏛️ Lecture fiscale — Souk Ahras':'🏛️ قراءة ضريبية — سوق أهراس'}</strong><div>${s.title}</div><div>${isFr?'Exonération proposée':'الإعفاء المقترح'}: <b>${s.years} ${isFr?'ans':'سنوات'}</b></div><div>${isFr?'Après exonération':'بعد الإعفاء'}: <b>${s.ibs}</b></div><div style="margin-top:6px">${isFr?'Ajoutez une recommandation de réinvestir 30% des bénéfices exonérés dans un délai de 4 ans.':'أدرج توصية إعادة استثمار 30% من الأرباح المعفاة خلال 4 سنوات.'}</div></div>
     </div>
     <div class="ai-card" style="margin-top:10px"><strong>${isFr?'🎓 Questions probables du comité':'🎓 أسئلة متوقعة من اللجنة'}</strong><ul>${committee.map(a=>`<li>${a}</li>`).join('')}</ul></div>`;
 }

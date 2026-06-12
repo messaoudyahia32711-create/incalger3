@@ -64,3 +64,41 @@ Stage Summary:
 - The tool includes 8-section financial generator per Ministerial Decision 1275
 - Students can use both the quick BMC canvas and the full financial tool
 - External link also available to open tool in new tab
+---
+Task ID: 1
+Agent: Main Agent
+Task: Rebrand BMC tool, restructure student dashboard Project Study tab
+
+Work Log:
+- Read and analyzed the entire BMC tool HTML (1054 lines) to understand branding, structure, and calculation algorithms
+- Replaced ALL University of Souk Ahras branding with University of Algiers 3 (جامعة الجزائر 3) branding
+- Updated CSS color variables from generic #1e3a5f to INC ALG 3 brand colors (#1B3A6B, #C8A951, #2E7D32)
+- Updated font stack to use Tajawal/Cairo matching the platform
+- Added Google Fonts imports for Tajawal and Cairo
+- Redesigned header with gradient background, gold kicker badge, and INC ALG 3/Université d'Alger 3 badges
+- Added decorative dot pattern overlay to header
+- Added golden separator line between header and content
+- Updated brand strip with INC ALG 3 logo fallback styling
+- Updated sidebar, panel, and step tabs with accent gold borders and gradient backgrounds
+- Updated buttons with hover animations and INC ALG 3 colors
+- Updated table headers, total rows, and section rows with INC ALG 3 colors
+- Updated BMC visual grid backgrounds with gradient fills
+- Updated privacy/assist banners with gradient backgrounds
+- Updated appendix titles with gold accent borders
+- Updated auto-plan box with INC ALG 3 styling
+- Updated all I18N strings (Arabic and French) with INC ALG 3 branding
+- Removed the BMC Canvas quick edit (BMCTool component) from the student dashboard
+- Removed the separate "Business Model" and "Commercial Model" sub-sections
+- Made "Project Study" (دراسة المشروع) directly show the BMC financial tool
+- Added elegant header banner with INC ALG 3 branding for the Project Study tab
+- Set iframe to use full viewport height for better tool experience
+- Updated i18n translations (ar/en/fr) for bmcToolDesc
+- Verified all calculation algorithms are preserved (scoreCalc, buildOperationalCashRows, buildCashflowRows, buildScfYear, drawChart, renderBMC, calculateTax, etc.)
+- Final build verification passed successfully
+
+Stage Summary:
+- BMC tool fully rebranded from University of Souk Ahras to INC ALG 3 — University of Algiers 3
+- Student dashboard now shows the financial tool directly when clicking "دراسة المشروع"
+- All visual elements updated to carry INC ALG 3 identity (colors, fonts, branding)
+- Calculation algorithms 100% preserved — no changes to any financial computations
+- Build passes successfully

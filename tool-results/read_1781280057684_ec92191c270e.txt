@@ -1,0 +1,302 @@
+   501→}
+   502→
+   503→// ==================== PROJECT SUBMIT ====================
+   504→
+   505→function ProjectSubmitPage({ locale, onNavigate, user }: { locale: Locale; onNavigate: (v: AppView) => void; user: any }) {
+   506→  const [step, setStep] = useState(1);
+   507→  const [submitted, setSubmitted] = useState(false);
+   508→  const [refNumber, setRefNumber] = useState('');
+   509→  const [form, setForm] = useState({ ownerName: '', email: user?.email || '', phone: '', projectName: '', field: 'ict', description: '', problem: '', targetAudience: '', addedValue: '', fundingRequired: 0, stage: 'idea', hasPartner: false, teamSize: 1, videoLink: '', legalFramework: 'مؤسسة ناشئة', tradeName: '', academicYear: '2024/2025', department: '' });
+   510→  const dir = localeDirection[locale];
+   511→  const updateForm = (key: string, value: any) => setForm((prev) => ({ ...prev, [key]: value }));
+   512→
+   513→  const handleSubmit = () => {
+   514→    const ref = `INC-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 999)).padStart(3, '0')}`;
+   515→    setRefNumber(ref);
+   516→    setSubmitted(true);
+   517→    toast.success(t(locale, 'projectSubmit.success'));
+   518→  };
+   519→
+   520→  if (submitted) {
+   521→    return (<div className="min-h-screen flex items-center justify-center py-12 px-4" style={{ background: 'linear-gradient(135deg, #0D1B2A 0%, #1B3A6B 50%, #0F2140 100%)', direction: dir }}><motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="bg-white rounded-3xl p-10 max-w-md w-full text-center shadow-2xl"><motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.2, type: 'spring' }} className="w-20 h-20 rounded-full mx-auto mb-6 bg-green-100 flex items-center justify-center"><Check className="w-10 h-10 text-green-600" /></motion.div><h2 className="text-2xl font-black text-[#1B3A6B] mb-2" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'projectSubmit.success')}</h2><div className="bg-[#1B3A6B] rounded-xl p-4 my-6"><p className="text-white/70 text-sm mb-1">{t(locale, 'projectSubmit.refNumber')}</p><p className="text-2xl font-black text-[#C8A951]" style={{ fontFamily: 'var(--font-cairo)' }}>{refNumber}</p></div><div className="flex gap-3"><button onClick={() => onNavigate('student-dashboard')} className="flex-1 py-3 rounded-xl bg-[#1B3A6B] text-white font-bold">{t(locale, 'projectSubmit.trackProject')}</button><button onClick={() => { setSubmitted(false); setStep(1); }} className="flex-1 py-3 rounded-xl border-2 border-[#1B3A6B] text-[#1B3A6B] font-bold">{t(locale, 'projectSubmit.submitAnother')}</button></div></motion.div></div>);
+   522→  }
+   523→
+   524→  return (
+   525→    <div className="min-h-screen bg-[#F5F7FA] py-8" style={{ direction: dir }}>
+   526→      <div className="max-w-2xl mx-auto px-4 sm:px-6">
+   527→        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8"><h1 className="text-3xl font-black text-[#1B3A6B] mb-2" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'projectSubmit.title')}</h1><p className="text-slate-600">{t(locale, 'projectSubmit.subtitle')}</p></motion.div>
+   528→        <div className="flex items-center gap-2 mb-8">
+   529→          {[1, 2, 3, 4].map((s) => (
+   530→            <React.Fragment key={s}>
+   531→              <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm transition-all ${s <= step ? 'bg-[#1B3A6B] text-white' : 'bg-slate-200 text-slate-400'}`}>{s}</div>
+   532→              {s < 4 && <div className={`flex-1 h-1 rounded ${s < step ? 'bg-[#1B3A6B]' : 'bg-slate-200'}`} />}
+   533→            </React.Fragment>
+   534→          ))}
+   535→        </div>
+   536→        <motion.div key={step} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="bg-white rounded-2xl p-6 sm:p-8 shadow-lg border border-slate-100">
+   537→          {step === 1 && (<div className="space-y-4">{[['ownerName', t(locale, 'projectSubmit.ownerName')], ['email', t(locale, 'projectSubmit.email')], ['phone', t(locale, 'projectSubmit.phone')], ['tradeName', t(locale, 'projectSubmit.tradeName')], ['academicYear', t(locale, 'projectSubmit.academicYear')], ['department', t(locale, 'projectSubmit.department')]].map(([key, label]) => (<div key={key}><label className="block text-sm font-bold text-slate-700 mb-1">{label} *</label><input type="text" value={(form as any)[key]} onChange={(e) => updateForm(key, e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none" /></div>))}</div>)}
+   538→          {step === 2 && (<div className="space-y-4"><div><label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'projectSubmit.projectName')} *</label><input type="text" value={form.projectName} onChange={(e) => updateForm('projectName', e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none" /></div><div><label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'projectSubmit.field')} *</label><div className="grid grid-cols-2 gap-2">{(['ict', 'digital', 'minerals', 'energy', 'industry', 'ecommerce', 'other'] as const).map((f) => (<button key={f} type="button" onClick={() => updateForm('field', f)} className={`px-4 py-3 rounded-xl text-sm font-medium transition-all border-2 ${form.field === f ? 'bg-[#1B3A6B] text-white border-[#1B3A6B]' : 'bg-white text-slate-600 border-slate-200'}`}>{t(locale, `fields.${f}`)}</button>))}</div></div><div><label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'projectSubmit.description')} *</label><textarea value={form.description} onChange={(e) => updateForm('description', e.target.value)} rows={4} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none resize-none" /></div><div><label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'projectSubmit.problem')} *</label><textarea value={form.problem} onChange={(e) => updateForm('problem', e.target.value)} rows={2} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none resize-none" /></div><div><label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'projectSubmit.targetAudience')} *</label><input type="text" value={form.targetAudience} onChange={(e) => updateForm('targetAudience', e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none" /></div><div><label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'projectSubmit.addedValue')} *</label><input type="text" value={form.addedValue} onChange={(e) => updateForm('addedValue', e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none" /></div></div>)}
+   539→          {step === 3 && (<div className="space-y-4"><div><label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'projectSubmit.legalFramework')}</label><select value={form.legalFramework} onChange={(e) => updateForm('legalFramework', e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none bg-white"><option value="مؤسسة ناشئة">{locale === 'ar' ? 'مؤسسة ناشئة' : 'Startup'}</option><option value="مؤسسة مصغرة">{locale === 'ar' ? 'مؤسسة مصغرة' : 'Micro-enterprise'}</option><option value="براءة اختراع">{locale === 'ar' ? 'براءة اختراع' : 'Patent'}</option></select></div><div><label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'projectSubmit.fundingRequired')} (DZD)</label><input type="number" value={form.fundingRequired} onChange={(e) => updateForm('fundingRequired', Number(e.target.value))} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none" /></div><div><label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'projectSubmit.stage')}</label><div className="flex gap-3">{(['idea', 'prototype', 'launched'] as const).map((s) => (<button key={s} type="button" onClick={() => updateForm('stage', s)} className={`flex-1 px-4 py-3 rounded-xl text-sm font-medium border-2 ${form.stage === s ? 'bg-[#1B3A6B] text-white border-[#1B3A6B]' : 'bg-white text-slate-600 border-slate-200'}`}>{t(locale, `stages.${s}`)}</button>))}</div></div><div className="flex items-center gap-3"><label className="text-sm font-bold text-slate-700">{t(locale, 'projectSubmit.hasPartner')}</label><button type="button" onClick={() => updateForm('hasPartner', !form.hasPartner)} className={`w-12 h-7 rounded-full transition-colors ${form.hasPartner ? 'bg-[#1B3A6B]' : 'bg-slate-300'}`}><div className={`w-5 h-5 rounded-full bg-white shadow transition-transform ${form.hasPartner ? 'translate-x-5 rtl:-translate-x-5' : ''}`} /></button></div><div><label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'projectSubmit.teamSize')}</label><input type="number" min={1} max={10} value={form.teamSize} onChange={(e) => updateForm('teamSize', Number(e.target.value))} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none" /></div><div><label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'projectSubmit.videoLink')}</label><input type="url" value={form.videoLink} onChange={(e) => updateForm('videoLink', e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none" /></div></div>)}
+   540→          {step === 4 && (<div className="bg-[#F5F7FA] rounded-xl p-6"><h3 className="font-bold text-[#1B3A6B] mb-4" style={{ fontFamily: 'var(--font-cairo)' }}>{form.projectName || '---'}</h3><div className="grid grid-cols-2 gap-3 text-sm">{[['ownerName', t(locale, 'projectSubmit.ownerName')], ['email', t(locale, 'projectSubmit.email')], ['field', t(locale, 'projectSubmit.field')], ['stage', t(locale, 'projectSubmit.stage')], ['legalFramework', t(locale, 'projectSubmit.legalFramework')], ['tradeName', t(locale, 'projectSubmit.tradeName')]].map(([key, label]) => (<div key={key}><span className="text-slate-400">{label}:</span><br/><span className="font-medium">{key === 'field' ? t(locale, `fields.${(form as any)[key]}`) : (form as any)[key]}</span></div>))}<div className="col-span-2"><span className="text-slate-400">{t(locale, 'projectSubmit.description')}:</span><br/><span className="font-medium">{form.description}</span></div></div></div>)}
+   541→          <div className="flex gap-3 mt-8">{step > 1 && <button type="button" onClick={() => setStep(step - 1)} className="px-6 py-3 rounded-xl border-2 border-slate-200 text-slate-600 font-bold flex items-center gap-2"><ChevronRight className="w-4 h-4 rtl-flip" />{t(locale, 'projectSubmit.prev')}</button>}{step < 4 ? <button type="button" onClick={() => setStep(step + 1)} className="flex-1 px-6 py-3 rounded-xl bg-[#1B3A6B] text-white font-bold flex items-center justify-center gap-2">{t(locale, 'projectSubmit.next')}<ChevronLeft className="w-4 h-4 rtl-flip" /></button> : <button type="button" onClick={handleSubmit} className="flex-1 px-6 py-3 rounded-xl bg-[#C8A951] text-[#0D1B2A] font-bold flex items-center justify-center gap-2 shadow-lg"><Send className="w-5 h-5" />{t(locale, 'projectSubmit.submit')}</button>}</div>
+   542→        </motion.div>
+   543→      </div>
+   544→    </div>
+   545→  );
+   546→}
+   547→
+   548→// ==================== BMC TOOL ====================
+   549→
+   550→function BMCTool({ locale, projectId }: { locale: Locale; projectId?: string }) {
+   551→  const { bmcData, setBmcData } = useAppStore();
+   552→  const dir = localeDirection[locale];
+   553→  const existingData = projectId ? bmcData[projectId] : null;
+   554→  const [bmc, setBmc] = useState<BMCBlock>(existingData || DEFAULT_BMC);
+   555→
+   556→  const updateBlock = (key: keyof BMCBlock, value: string) => {
+   557→    const updated = { ...bmc, [key]: value };
+   558→    setBmc(updated);
+   559→  };
+   560→
+   561→  const handleSave = () => {
+   562→    if (projectId) setBmcData(projectId, bmc);
+   563→    toast.success(t(locale, 'bmc.saved'));
+   564→  };
+   565→
+   566→  const blocks = [
+   567→    { key: 'keyPartners' as keyof BMCBlock, label: t(locale, 'bmc.keyPartners'), color: '#1B3A6B', icon: HandshakeIcon },
+   568→    { key: 'keyActivities' as keyof BMCBlock, label: t(locale, 'bmc.keyActivities'), color: '#2952A3', icon: Zap },
+   569→    { key: 'keyResources' as keyof BMCBlock, label: t(locale, 'bmc.keyResources'), color: '#2E7D32', icon: Briefcase },
+   570→    { key: 'valueProposition' as keyof BMCBlock, label: t(locale, 'bmc.valueProposition'), color: '#C8A951', icon: Star },
+   571→    { key: 'customerRelationships' as keyof BMCBlock, label: t(locale, 'bmc.customerRelationships'), color: '#E67E22', icon: Heart },
+   572→    { key: 'channels' as keyof BMCBlock, label: t(locale, 'bmc.channels'), color: '#F39C12', icon: ArrowRight },
+   573→    { key: 'customerSegments' as keyof BMCBlock, label: t(locale, 'bmc.customerSegments'), color: '#C0392B', icon: UsersRound },
+   574→    { key: 'costStructure' as keyof BMCBlock, label: t(locale, 'bmc.costStructure'), color: '#6B7280', icon: DollarSign },
+   575→    { key: 'revenueStreams' as keyof BMCBlock, label: t(locale, 'bmc.revenueStreams'), color: '#27AE60', icon: TrendingUp },
+   576→  ];
+   577→
+   578→  return (
+   579→    <div style={{ direction: dir }}>
+   580→      <div className="mb-6">
+   581→        <h2 className="text-2xl font-black text-[#1B3A6B] mb-1" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'bmc.title')}</h2>
+   582→        <p className="text-slate-500 text-sm">{t(locale, 'bmc.subtitle')}</p>
+   583→      </div>
+   584→
+   585→      {/* BMC Canvas Grid */}
+   586→      <div className="grid grid-cols-1 md:grid-cols-5 gap-3 mb-6">
+   587→        {/* Row 1: Key Partners (2 cols), Key Activities, Value Proposition (2 cols), Customer Relationships, Customer Segments (2 cols) */}
+   588→        <div className="md:col-span-2 md:row-span-2 bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+   589→          <div className="flex items-center gap-2 mb-2"><HandshakeIcon className="w-4 h-4" style={{ color: '#1B3A6B' }} /><span className="font-bold text-xs text-[#1B3A6B]">{t(locale, 'bmc.keyPartners')}</span></div>
+   590→          <textarea value={bmc.keyPartners} onChange={(e) => updateBlock('keyPartners', e.target.value)} className="w-full h-24 text-xs border-0 outline-none resize-none bg-transparent" placeholder={t(locale, 'bmc.placeholder')} />
+   591→        </div>
+   592→        <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+   593→          <div className="flex items-center gap-2 mb-2"><Zap className="w-4 h-4 text-[#2952A3]" /><span className="font-bold text-xs text-[#2952A3]">{t(locale, 'bmc.keyActivities')}</span></div>
+   594→          <textarea value={bmc.keyActivities} onChange={(e) => updateBlock('keyActivities', e.target.value)} className="w-full h-16 text-xs border-0 outline-none resize-none bg-transparent" placeholder={t(locale, 'bmc.placeholder')} />
+   595→        </div>
+   596→        <div className="md:row-span-2 bg-white rounded-xl p-4 shadow-sm border border-[#C8A951]/30">
+   597→          <div className="flex items-center gap-2 mb-2"><Star className="w-4 h-4 text-[#C8A951]" /><span className="font-bold text-xs text-[#C8A951]">{t(locale, 'bmc.valueProposition')}</span></div>
+   598→          <textarea value={bmc.valueProposition} onChange={(e) => updateBlock('valueProposition', e.target.value)} className="w-full h-28 text-xs border-0 outline-none resize-none bg-transparent" placeholder={t(locale, 'bmc.placeholder')} />
+   599→        </div>
+   600→        <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+   601→          <div className="flex items-center gap-2 mb-2"><Heart className="w-4 h-4 text-[#E67E22]" /><span className="font-bold text-xs text-[#E67E22]">{t(locale, 'bmc.customerRelationships')}</span></div>
+   602→          <textarea value={bmc.customerRelationships} onChange={(e) => updateBlock('customerRelationships', e.target.value)} className="w-full h-16 text-xs border-0 outline-none resize-none bg-transparent" placeholder={t(locale, 'bmc.placeholder')} />
+   603→        </div>
+   604→        <div className="md:col-span-1 md:row-span-2 bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+   605→          <div className="flex items-center gap-2 mb-2"><UsersRound className="w-4 h-4 text-[#C0392B]" /><span className="font-bold text-xs text-[#C0392B]">{t(locale, 'bmc.customerSegments')}</span></div>
+   606→          <textarea value={bmc.customerSegments} onChange={(e) => updateBlock('customerSegments', e.target.value)} className="w-full h-24 text-xs border-0 outline-none resize-none bg-transparent" placeholder={t(locale, 'bmc.placeholder')} />
+   607→        </div>
+   608→        {/* Row 2: Key Resources, Channels */}
+   609→        <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+   610→          <div className="flex items-center gap-2 mb-2"><Briefcase className="w-4 h-4 text-[#2E7D32]" /><span className="font-bold text-xs text-[#2E7D32]">{t(locale, 'bmc.keyResources')}</span></div>
+   611→          <textarea value={bmc.keyResources} onChange={(e) => updateBlock('keyResources', e.target.value)} className="w-full h-16 text-xs border-0 outline-none resize-none bg-transparent" placeholder={t(locale, 'bmc.placeholder')} />
+   612→        </div>
+   613→        <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+   614→          <div className="flex items-center gap-2 mb-2"><ArrowRight className="w-4 h-4 text-[#F39C12]" /><span className="font-bold text-xs text-[#F39C12]">{t(locale, 'bmc.channels')}</span></div>
+   615→          <textarea value={bmc.channels} onChange={(e) => updateBlock('channels', e.target.value)} className="w-full h-16 text-xs border-0 outline-none resize-none bg-transparent" placeholder={t(locale, 'bmc.placeholder')} />
+   616→        </div>
+   617→        {/* Row 3: Cost Structure, Revenue Streams */}
+   618→        <div className="md:col-span-2 bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+   619→          <div className="flex items-center gap-2 mb-2"><DollarSign className="w-4 h-4 text-[#6B7280]" /><span className="font-bold text-xs text-[#6B7280]">{t(locale, 'bmc.costStructure')}</span></div>
+   620→          <textarea value={bmc.costStructure} onChange={(e) => updateBlock('costStructure', e.target.value)} className="w-full h-20 text-xs border-0 outline-none resize-none bg-transparent" placeholder={t(locale, 'bmc.placeholder')} />
+   621→        </div>
+   622→        <div className="md:col-span-3 bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+   623→          <div className="flex items-center gap-2 mb-2"><TrendingUp className="w-4 h-4 text-[#27AE60]" /><span className="font-bold text-xs text-[#27AE60]">{t(locale, 'bmc.revenueStreams')}</span></div>
+   624→          <textarea value={bmc.revenueStreams} onChange={(e) => updateBlock('revenueStreams', e.target.value)} className="w-full h-20 text-xs border-0 outline-none resize-none bg-transparent" placeholder={t(locale, 'bmc.placeholder')} />
+   625→        </div>
+   626→      </div>
+   627→
+   628→      <div className="flex flex-wrap gap-3 items-center">
+   629→        <button onClick={handleSave} className="px-6 py-2.5 rounded-xl bg-[#1B3A6B] text-white font-bold text-sm flex items-center gap-2 hover:bg-[#2952A3]"><Check className="w-4 h-4" />{t(locale, 'bmc.save')}</button>
+   630→        <a href="https://bmc-1275.github.io/BMC-TOOL/" target="_blank" rel="noopener noreferrer" className="px-6 py-2.5 rounded-xl bg-[#C8A951] text-[#0D1B2A] font-bold text-sm flex items-center gap-2 hover:bg-[#E4C97A] shadow-md"><ExternalLink className="w-4 h-4" />{t(locale, 'bmc.toolLink')}</a>
+   631→      </div>
+   632→      <p className="text-xs text-slate-400 mt-3">{t(locale, 'bmc.toolDesc')}</p>
+   633→    </div>
+   634→  );
+   635→}
+   636→
+   637→// ==================== MESSAGING PANEL ====================
+   638→
+   639→function MessagingPanel({ locale, userId, userRole, otherPartyName }: { locale: Locale; userId: string; userRole: 'student' | 'admin'; otherPartyName: string }) {
+   640→  const { messages, addMessage, markMessagesRead } = useAppStore();
+   641→  const [newMsg, setNewMsg] = useState('');
+   642→  const dir = localeDirection[locale];
+   643→  const chatMessages = messages.filter((m: Message) => (m.from === userId || m.to === userId));
+   644→  const otherRole = userRole === 'student' ? 'admin' : 'student';
+   645→
+   646→  useEffect(() => { markMessagesRead(userId, otherRole); }, [userId, otherRole, markMessagesRead]);
+   647→
+   648→  const handleSend = () => {
+   649→    if (!newMsg.trim()) return;
+   650→    addMessage({ id: `msg-${Date.now()}`, from: userId, fromName: userId === 'admin-001' ? 'المدير العام' : 'الطالب', fromRole: userRole, to: userRole === 'admin' ? 'student-001' : 'admin-001', text: newMsg, timestamp: new Date().toISOString(), read: false });
+   651→    setNewMsg('');
+   652→  };
+   653→
+   654→  return (
+   655→    <div className="flex flex-col h-[500px]" style={{ direction: dir }}>
+   656→      <div className="p-3 border-b border-slate-200 flex items-center gap-2"><div className="w-8 h-8 rounded-full bg-[#1B3A6B] flex items-center justify-center"><Shield className="w-4 h-4 text-white" /></div><span className="font-bold text-[#1B3A6B] text-sm">{otherPartyName}</span></div>
+   657→      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+   658→        {chatMessages.length === 0 && <p className="text-center text-slate-400 text-sm py-8">{t(locale, 'common.noData')}</p>}
+   659→        {chatMessages.map((msg: Message) => (
+   660→          <div key={msg.id} className={`flex ${msg.from === userId ? 'justify-end' : 'justify-start'}`}>
+   661→            <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm ${msg.from === userId ? 'bg-[#1B3A6B] text-white rounded-br-sm' : 'bg-slate-100 text-slate-700 rounded-bl-sm'}`}>
+   662→              <p>{msg.text}</p>
+   663→              <p className={`text-[10px] mt-1 ${msg.from === userId ? 'text-white/50' : 'text-slate-400'}`}>{new Date(msg.timestamp).toLocaleTimeString(locale === 'ar' ? 'ar-DZ' : 'en', { hour: '2-digit', minute: '2-digit' })}</p>
+   664→            </div>
+   665→          </div>
+   666→        ))}
+   667→      </div>
+   668→      <div className="p-3 border-t border-slate-200 flex gap-2">
+   669→        <input type="text" value={newMsg} onChange={(e) => setNewMsg(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSend()} placeholder={t(locale, 'student.typeMessage')} className="flex-1 px-4 py-2.5 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm" />
+   670→        <button onClick={handleSend} className="px-4 py-2.5 rounded-xl bg-[#1B3A6B] text-white hover:bg-[#2952A3]"><Send className="w-4 h-4" /></button>
+   671→      </div>
+   672→    </div>
+   673→  );
+   674→}
+   675→
+   676→// ==================== STUDENT DASHBOARD ====================
+   677→
+   678→function StudentDashboard({ locale, user, onNavigate }: { locale: Locale; user: any; onNavigate: (v: AppView) => void }) {
+   679→  const { studentTab, setStudentTab, sidebarCollapsed, setSidebarCollapsed, editableStats, studentProfiles, setStudentProfile, setUser, messages } = useAppStore();
+   680→  const dir = localeDirection[locale];
+   681→
+   682→  const myProject = MOCK_PROJECTS.find(p => p.ownerEmail === user?.email) || MOCK_PROJECTS[0];
+   683→  const statusStepMap: Record<string, number> = { review: 0, committee: 1, accepted: 2, revision: 1, incubated: 4, rejected: -1 };
+   684→  const currentStep = statusStepMap[myProject.status] ?? 0;
+   685→
+   686→  const progressPercent = myProject.status === 'rejected' ? 0 : Math.round(((currentStep + 1) / 5) * 100);
+   687→
+   688→  // Settings state
+   689→  const [editName, setEditName] = useState(user?.name || '');
+   690→  const [editEmail, setEditEmail] = useState(user?.email || '');
+   691→  const [editPhone, setEditPhone] = useState('');
+   692→  const [editFaculty, setEditFaculty] = useState(user?.faculty || '');
+   693→  const [editLevel, setEditLevel] = useState(user?.level || '');
+   694→  const [currentPassword, setCurrentPassword] = useState('');
+   695→  const [newPassword, setNewPassword] = useState('');
+   696→  const [confirmPassword, setConfirmPassword] = useState('');
+   697→
+   698→  // Load saved profile on mount
+   699→  useEffect(() => {
+   700→    const saved = studentProfiles[user?.id || ''];
+   701→    if (saved) {
+   702→      setEditName(saved.name);
+   703→      setEditEmail(saved.email);
+   704→      setEditPhone(saved.phone);
+   705→      setEditFaculty(saved.faculty);
+   706→      setEditLevel(saved.level);
+   707→    } else if (myProject) {
+   708→      setEditPhone(myProject.ownerPhone || '');
+   709→    }
+   710→  }, [user?.id, studentProfiles, myProject]);
+   711→
+   712→  const handleSaveProfile = () => {
+   713→    const profile = { name: editName, email: editEmail, phone: editPhone, faculty: editFaculty, level: editLevel, password: studentProfiles[user?.id || '']?.password || '' };
+   714→    setStudentProfile(user?.id || '', profile);
+   715→    setUser({ ...user, name: editName, email: editEmail, faculty: editFaculty, level: editLevel, phone: editPhone });
+   716→    toast.success(t(locale, 'student.profileUpdated'));
+   717→  };
+   718→
+   719→  const handleChangePassword = () => {
+   720→    const savedProfile = studentProfiles[user?.id || ''];
+   721→    const savedPassword = savedProfile?.password || (user?.id === 'student-001' ? 'student123' : '');
+   722→    if (currentPassword !== savedPassword) {
+   723→      toast.error(t(locale, 'student.incorrectPassword'));
+   724→      return;
+   725→    }
+   726→    if (newPassword !== confirmPassword) {
+   727→      toast.error(t(locale, 'student.passwordMismatch'));
+   728→      return;
+   729→    }
+   730→    if (newPassword.length < 4) {
+   731→      toast.error(locale === 'ar' ? 'كلمة المرور قصيرة جداً' : 'Password too short');
+   732→      return;
+   733→    }
+   734→    const profile = { name: editName, email: editEmail, phone: editPhone, faculty: editFaculty, level: editLevel, password: newPassword };
+   735→    setStudentProfile(user?.id || '', profile);
+   736→    setCurrentPassword('');
+   737→    setNewPassword('');
+   738→    setConfirmPassword('');
+   739→    toast.success(t(locale, 'student.passwordChanged'));
+   740→  };
+   741→
+   742→  const unreadMsgs = messages.filter((m: Message) => m.to === user?.id && !m.read).length;
+   743→
+   744→  const tabs = [
+   745→    { key: 'overview', label: t(locale, 'student.overview'), icon: HomeIcon },
+   746→    { key: 'my-project', label: t(locale, 'student.myProject'), icon: FileText },
+   747→    { key: 'bmc', label: t(locale, 'student.bmc'), icon: Target },
+   748→    { key: 'messages', label: t(locale, 'student.messages'), icon: MessageCircle, badge: unreadMsgs },
+   749→    { key: 'guide', label: t(locale, 'student.guide'), icon: BookOpen },
+   750→    { key: 'profile', label: t(locale, 'student.profile'), icon: Users },
+   751→    { key: 'settings', label: t(locale, 'student.settings'), icon: Settings },
+   752→  ];
+   753→
+   754→  const stepIcons = [Lightbulb, ClipboardCheck, GraduationCap, Check, Rocket];
+   755→  const stepColors = ['#C8A951', '#1B3A6B', '#2E7D32', '#27AE60', '#C8A951'];
+   756→
+   757→  return (
+   758→    <div className="min-h-screen bg-[#F5F7FA] flex" style={{ direction: dir }}>
+   759→      <Sidebar items={tabs} activeTab={studentTab} onTabChange={setStudentTab} collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} locale={locale} />
+   760→      <div className="flex-1 flex flex-col min-w-0">
+   761→        {/* Header */}
+   762→        <div className="bg-gradient-to-r from-[#1B3A6B] to-[#2952A3] py-5 px-6">
+   763→          <div className="flex items-center gap-4">
+   764→            <div className="w-12 h-12 rounded-xl bg-[#C8A951] flex items-center justify-center text-[#0D1B2A] font-black text-lg" style={{ fontFamily: 'var(--font-cairo)' }}>{user?.name?.charAt(0) || 'S'}</div>
+   765→            <div className="flex-1"><h1 className="text-xl font-black text-white" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'student.welcome')}، {user?.name}</h1><p className="text-[#E4C97A] text-xs">{user?.email}</p></div>
+   766→            {myProject && <StatusBadge status={myProject.status} locale={locale} />}
+   767→          </div>
+   768→        </div>
+   769→
+   770→        {/* Mobile tabs */}
+   771→        <div className="md:hidden flex gap-1 p-2 overflow-x-auto bg-white border-b border-slate-200">
+   772→          {tabs.map((tab) => (<button key={tab.key} onClick={() => setStudentTab(tab.key)} className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap ${studentTab === tab.key ? 'bg-[#1B3A6B] text-white' : 'text-slate-500'}`}><tab.icon className="w-3.5 h-3.5" />{tab.label}</button>))}
+   773→        </div>
+   774→
+   775→        {/* Content */}
+   776→        <div className="flex-1 p-4 sm:p-6 overflow-y-auto">
+   777→
+   778→          {/* ========== OVERVIEW TAB ========== */}
+   779→          {studentTab === 'overview' && (
+   780→            <div className="space-y-6">
+   781→              {/* Project Header Card */}
+   782→              <div className="bg-white rounded-2xl overflow-hidden shadow-md border border-slate-100">
+   783→                <div className="p-6" style={{ background: 'linear-gradient(135deg, #0D1B2A, #1B3A6B)' }}>
+   784→                  <div className="flex flex-wrap items-center gap-2 mb-3">
+   785→                    <FieldBadge field={myProject.field} locale={locale} />
+   786→                    <StatusBadge status={myProject.status} locale={locale} />
+   787→                    <span className="text-white/40 text-sm font-mono">{myProject.refNumber}</span>
+   788→                  </div>
+   789→                  <h2 className="text-2xl font-black text-white mb-1" style={{ fontFamily: 'var(--font-cairo)' }}>{locale === 'ar' ? myProject.projectName : myProject.projectNameEn}</h2>
+   790→                  <p className="text-white/50 text-sm">{myProject.tradeName} • {t(locale, `stages.${myProject.stage}`)}</p>
+   791→                </div>
+   792→
+   793→                {/* Progress Bar */}
+   794→                <div className="p-6">
+   795→                  <div className="flex items-center justify-between mb-3">
+   796→                    <span className="text-sm font-bold text-[#1B3A6B]">{t(locale, 'student.progressLabel')}</span>
+   797→                    <span className="text-sm font-black text-[#C8A951]">{progressPercent}%</span>
+   798→                  </div>
+   799→                  <div className="h-3 bg-slate-100 rounded-full overflow-hidden mb-6">
+   800→                    <motion.div initial={{ width: 0 }} animate={{ width: `${progressPercent}%` }} transition={{ duration: 1, ease: 'easeOut' }} className="h-full rounded-full" style={{ background: 'linear-gradient(90deg, #1B3A6B, #C8A951)' }} />
+
+[showing lines 501-800 of 1384; use offset=801 with limit to continue reading]
