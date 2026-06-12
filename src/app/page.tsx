@@ -324,11 +324,6 @@ function LandingPage({ locale, onNavigate }: { locale: Locale; onNavigate: (v: A
             </motion.div>
             <motion.div initial={{ opacity: 0, x: locale === 'ar' ? -30 : 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="relative rounded-3xl overflow-hidden shadow-2xl">
               <img src="/images/about-incubator.png" alt="INC ALG 3 Incubator" className="w-full h-[400px] object-cover" onError={handleImgError} />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0D1B2A]/80 via-transparent to-transparent" />
-              <div className="absolute bottom-0 p-8 text-white">
-                <div className="flex items-center gap-3 mb-4"><div className="w-12 h-12 rounded-xl bg-[#C8A951]/20 flex items-center justify-center"><Building2 className="w-6 h-6 text-[#C8A951]" /></div><h3 className="text-2xl font-black" style={{ fontFamily: 'var(--font-cairo)' }}>INC ALG 3</h3></div>
-                <div className="grid grid-cols-2 gap-3">{[{ value: '50,000+', label: locale === 'ar' ? 'طالب' : 'Students' }, { value: '4', label: locale === 'ar' ? 'كليات' : 'Faculties' }, { value: '11+', label: locale === 'ar' ? 'دفعات' : 'Batches' }, { value: '1,800+', label: locale === 'ar' ? 'مشروع' : 'Projects' }].map((item, i) => (<div key={i} className="bg-white/10 backdrop-blur-sm rounded-xl p-3 text-center"><div className="text-lg font-black text-[#E4C97A]" style={{ fontFamily: 'var(--font-cairo)' }}>{item.value}</div><div className="text-xs text-white/70">{item.label}</div></div>))}</div>
-              </div>
             </motion.div>
           </div>
         </div>
