@@ -40,6 +40,8 @@ export const MOCK_MESSAGES = [
 
 export const ADMIN_CREDENTIALS = { email: 'admin@univ-alger3.dz', password: 'admin123' };
 
+export const STUDENT_CREDENTIALS = { email: 'ahmed.benali@univ-alger3.dz', password: 'student123' };
+
 export const DEFAULT_BMC = {
   keyPartners: '• موردون\n• هيئات دعم ومرافقة\n• جامعة / حاضنة أعمال',
   keyActivities: '• الإنتاج أو تقديم الخدمة\n• التسويق والبيع\n• خدمة العملاء',

@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { useAppStore, type AppView, type Message, type BMCBlock, type EditableStats } from '@/lib/store';
 import { t, type Locale, localeNames, localeDirection } from '@/lib/i18n';
-import { MOCK_PROJECTS, MOCK_PARTNERS, MOCK_EVENTS, MOCK_MESSAGES, ADMIN_CREDENTIALS, DEFAULT_BMC } from '@/lib/mockData';
+import { MOCK_PROJECTS, MOCK_PARTNERS, MOCK_EVENTS, MOCK_MESSAGES, ADMIN_CREDENTIALS, STUDENT_CREDENTIALS, DEFAULT_BMC } from '@/lib/mockData';
 import { toast } from 'sonner';
 
 // ==================== HELPER COMPONENTS ====================
@@ -338,6 +338,11 @@ function AuthPage({ locale, onNavigate, onLogin }: { locale: Locale; onNavigate:
         onLogin({ id: 'admin-001', email, name: locale === 'ar' ? 'المدير العام' : 'Admin', role: 'admin' });
         toast.success(locale === 'ar' ? 'تم تسجيل الدخول بنجاح' : 'Login successful');
         onNavigate('admin-dashboard');
+      } else if (isLogin && email === STUDENT_CREDENTIALS.email && password === STUDENT_CREDENTIALS.password) {
+        const matchingProject = MOCK_PROJECTS.find(p => p.ownerEmail === email);
+        onLogin({ id: 'student-001', email, name: matchingProject?.ownerName || email.split('@')[0], role: 'student', faculty: matchingProject?.faculty, level: matchingProject?.level });
+        toast.success(locale === 'ar' ? 'تم تسجيل الدخول كطالب بنجاح' : 'Student login successful');
+        onNavigate('student-dashboard');
       } else if (isLogin && email && password) {
         const matchingProject = MOCK_PROJECTS.find(p => p.ownerEmail === email);
         onLogin({ id: 'student-001', email, name: matchingProject?.ownerName || email.split('@')[0], role: 'student', faculty: matchingProject?.faculty, level: matchingProject?.level });
@@ -370,7 +375,16 @@ function AuthPage({ locale, onNavigate, onLogin }: { locale: Locale; onNavigate:
             <div><label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'auth.faculty')}</label><select value={faculty} onChange={(e) => setFaculty(e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm bg-white"><option value="">{t(locale, 'auth.faculty')}</option>{(['eco', 'info', 'pol', 'sport'] as const).map((f) => (<option key={f} value={f}>{t(locale, `faculties.${f}`)}</option>))}</select></div>
             <div><label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'auth.level')}</label><select value={level} onChange={(e) => setLevel(e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm bg-white"><option value="">{t(locale, 'auth.level')}</option>{(['l1', 'l2', 'l3', 'm1', 'm2', 'phd'] as const).map((l) => (<option key={l} value={l}>{t(locale, `levels.${l}`)}</option>))}</select></div></>)}
             <button type="submit" disabled={loading} className="w-full py-4 rounded-xl bg-[#1B3A6B] text-white font-bold text-lg hover:bg-[#2952A3] transition-all disabled:opacity-50 flex items-center justify-center gap-2">{loading ? <RefreshCw className="w-5 h-5 animate-spin" /> : <LogIn className="w-5 h-5" />}{isLogin ? t(locale, 'auth.loginBtn') : t(locale, 'auth.registerBtn')}</button>
-            {isLogin && <div className="text-center pt-2"><button type="button" onClick={() => { setEmail('admin@univ-alger3.dz'); setPassword('admin123'); }} className="text-xs text-slate-400 hover:text-[#1B3A6B] underline decoration-dashed">{t(locale, 'auth.adminLogin')}</button></div>}
+            {isLogin && (
+              <div className="flex gap-3 pt-2">
+                <button type="button" onClick={() => { setEmail(ADMIN_CREDENTIALS.email); setPassword(ADMIN_CREDENTIALS.password); }} className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#1B3A6B]/5 hover:bg-[#1B3A6B]/10 text-[#1B3A6B] text-xs font-bold border border-[#1B3A6B]/10 transition-all hover:border-[#1B3A6B]/30">
+                  <Shield className="w-3.5 h-3.5" />{t(locale, 'auth.adminLogin')}
+                </button>
+                <button type="button" onClick={() => { setEmail(STUDENT_CREDENTIALS.email); setPassword(STUDENT_CREDENTIALS.password); }} className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#2E7D32]/5 hover:bg-[#2E7D32]/10 text-[#2E7D32] text-xs font-bold border border-[#2E7D32]/10 transition-all hover:border-[#2E7D32]/30">
+                  <GraduationCap className="w-3.5 h-3.5" />{t(locale, 'auth.studentLogin')}
+                </button>
+              </div>
+            )}
             <div className="text-center pt-4 border-t border-slate-100"><button type="button" onClick={() => setIsLogin(!isLogin)} className="text-[#1B3A6B] font-bold text-sm hover:underline">{isLogin ? t(locale, 'auth.noAccount') : t(locale, 'auth.hasAccount')}</button></div>
           </form>
         </div>

@@ -1,0 +1,1060 @@
+     1→'use client';
+     2→
+     3→import React, { useState, useEffect, useRef, useCallback } from 'react';
+     4→import { motion, AnimatePresence } from 'framer-motion';
+     5→import {
+     6→  Building2, Users, TrendingUp, Award, ChevronLeft, ChevronRight,
+     7→  Menu, X, Globe, LogIn, LogOut, Plus, Eye, Check, AlertCircle,
+     8→  Lightbulb, ClipboardCheck, GraduationCap, Rocket, Banknote,
+     9→  Shield, Mail, Phone, MapPin, ExternalLink, Star, ArrowRight,
+    10→  BarChart3, PieChart, Activity, FileText, Settings, ImageIcon,
+    11→  Video, Edit, Trash2, Search, Filter, HomeIcon, LayoutDashboard,
+    12→  UserPlus, ChevronDown, Sparkles, Target, Zap, Heart,
+    13→  Facebook, Instagram, Youtube, Send, RefreshCw, MessageCircle,
+    14→  BookOpen, Info, ArrowLeft, PanelLeftClose, PanelLeftOpen,
+    15→  Clock, DollarSign, UsersRound, HandshakeIcon, Briefcase,
+    16→  CircleDot, CircleCheck, CircleAlert, CircleX, Circle
+    17→} from 'lucide-react';
+    18→import { useAppStore, type AppView, type Message, type BMCBlock, type EditableStats } from '@/lib/store';
+    19→import { t, type Locale, localeNames, localeDirection } from '@/lib/i18n';
+    20→import { MOCK_PROJECTS, MOCK_PARTNERS, MOCK_EVENTS, MOCK_MESSAGES, ADMIN_CREDENTIALS, STUDENT_CREDENTIALS, DEFAULT_BMC } from '@/lib/mockData';
+    21→import { toast } from 'sonner';
+    22→
+    23→// ==================== HELPER COMPONENTS ====================
+    24→
+    25→function StatusBadge({ status, locale }: { status: string; locale: Locale }) {
+    26→  const colors: Record<string, string> = {
+    27→    review: 'bg-amber-100 text-amber-800 border-amber-300', committee: 'bg-blue-100 text-blue-800 border-blue-300',
+    28→    accepted: 'bg-green-100 text-green-800 border-green-300', rejected: 'bg-red-100 text-red-800 border-red-300',
+    29→    revision: 'bg-orange-100 text-orange-800 border-orange-300', incubated: 'bg-emerald-100 text-emerald-800 border-emerald-300',
+    30→  };
+    31→  return <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border ${colors[status] || 'bg-gray-100 text-gray-800'}`}>{t(locale, `status.${status}`)}</span>;
+    32→}
+    33→
+    34→function FieldBadge({ field, locale }: { field: string; locale: Locale }) {
+    35→  const icons: Record<string, string> = { ict: '💻', digital: '🌐', minerals: '⛏️', energy: '☀️', industry: '🏭', ecommerce: '🛒', other: '📦' };
+    36→  return <span className="inline-flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200"><span>{icons[field] || '📦'}</span>{t(locale, `fields.${field}`)}</span>;
+    37→}
+    38→
+    39→function AnimatedCounter({ target, duration = 2000 }: { target: number; duration?: number }) {
+    40→  const [count, setCount] = useState(0);
+    41→  const hasAnimated = useRef(false);
+    42→  const startAnimation = useCallback(() => {
+    43→    if (hasAnimated.current) return;
+    44→    hasAnimated.current = true;
+    45→    const start = Date.now();
+    46→    const animate = () => {
+    47→      const progress = Math.min((Date.now() - start) / duration, 1);
+    48→      setCount(Math.floor((1 - Math.pow(1 - progress, 3)) * target));
+    49→      if (progress < 1) requestAnimationFrame(animate);
+    50→    };
+    51→    requestAnimationFrame(animate);
+    52→  }, [target, duration]);
+    53→  useEffect(() => {
+    54→    const timer = setTimeout(startAnimation, 800);
+    55→    return () => clearTimeout(timer);
+    56→  }, [startAnimation]);
+    57→  return <span>{count.toLocaleString()}</span>;
+    58→}
+    59→
+    60→// ==================== MARQUEE BAR ====================
+    61→
+    62→function MarqueeBar({ locale }: { locale: Locale }) {
+    63→  return (
+    64→    <div className="w-full overflow-hidden py-1.5" style={{ background: 'linear-gradient(90deg, #C8A951 0%, #E4C97A 50%, #C8A951 100%)' }}>
+    65→      <div className="flex whitespace-nowrap animate-marquee">
+    66→        {[1, 2, 3].map((i) => (<span key={i} className="mx-8 text-xs font-bold text-[#0D1B2A]" style={{ fontFamily: 'var(--font-amiri), Amiri, serif' }}>✦ {t(locale, 'hero.marquee')} ✦</span>))}
+    67→      </div>
+    68→    </div>
+    69→  );
+    70→}
+    71→
+    72→// ==================== HEADER ====================
+    73→
+    74→function Header({ locale, currentView, onNavigate, user, onLogout }: { locale: Locale; currentView: AppView; onNavigate: (v: AppView) => void; user: any; onLogout: () => void }) {
+    75→  const [scrolled, setScrolled] = useState(false);
+    76→  const [mobileOpen, setMobileOpen] = useState(false);
+    77→  const [langOpen, setLangOpen] = useState(false);
+    78→  const { setLocale, messages } = useAppStore();
+    79→  const dir = localeDirection[locale];
+    80→  const unreadCount = user ? messages.filter((m: Message) => m.to === user.id && !m.read).length : 0;
+    81→
+    82→  useEffect(() => { const h = () => setScrolled(window.scrollY > 20); window.addEventListener('scroll', h); return () => window.removeEventListener('scroll', h); }, []);
+    83→
+    84→  const navLinks = [
+    85→    { key: 'landing', label: t(locale, 'nav.home'), icon: HomeIcon },
+    86→    { key: 'projects', label: t(locale, 'nav.projects'), icon: Eye },
+    87→    { key: 'submit-project', label: t(locale, 'nav.submit'), icon: Plus },
+    88→    { key: 'about', label: t(locale, 'nav.about'), icon: Building2 },
+    89→  ];
+    90→
+    91→  return (
+    92→    <header className={`sticky top-0 z-50 transition-all duration-300 ${scrolled ? 'shadow-lg bg-[#0D1B2A]/98' : 'bg-[#0D1B2A]'}`} style={{ direction: dir }}>
+    93→      <MarqueeBar locale={locale} />
+    94→      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+    95→        <div className="flex items-center justify-between h-14">
+    96→          <div className="flex items-center gap-3 cursor-pointer" onClick={() => onNavigate('landing')}>
+    97→            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#C8A951] to-[#E4C97A] flex items-center justify-center shadow-lg"><Building2 className="w-4 h-4 text-[#0D1B2A]" /></div>
+    98→            <div><h1 className="text-white font-bold text-base leading-tight" style={{ fontFamily: 'var(--font-cairo)' }}>INC ALG 3</h1><p className="text-[#E4C97A] text-[9px] leading-tight">{t(locale, 'brandSubtitle').substring(0, 28)}...</p></div>
+    99→          </div>
+   100→          <nav className="hidden lg:flex items-center gap-0.5">
+   101→            {navLinks.map((link) => (<button key={link.key} onClick={() => { onNavigate(link.key as AppView); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 ${currentView === link.key ? 'text-[#C8A951] bg-[#C8A951]/10' : 'text-white/80 hover:text-[#E4C97A]'}`}><link.icon className="w-3.5 h-3.5" />{link.label}</button>))}
+   102→          </nav>
+   103→          <div className="flex items-center gap-2">
+   104→            <div className="relative">
+   105→              <button onClick={() => setLangOpen(!langOpen)} className="flex items-center gap-1 px-2 py-1 rounded-lg text-white/80 hover:text-white text-xs border border-white/10"><Globe className="w-3.5 h-3.5" /><span className="hidden sm:inline">{localeNames[locale]}</span><ChevronDown className="w-3 h-3" /></button>
+   106→              {langOpen && (<div className="absolute top-full mt-1 end-0 bg-white rounded-xl shadow-xl border z-50 min-w-[130px]">{(Object.keys(localeNames) as Locale[]).map((loc) => (<button key={loc} onClick={() => { setLocale(loc); setLangOpen(false); }} className={`w-full px-3 py-2 text-sm text-start hover:bg-slate-50 ${locale === loc ? 'bg-[#1B3A6B]/5 text-[#1B3A6B] font-bold' : 'text-slate-700'}`}>{localeNames[loc]}</button>))}</div>)}
+   107→            </div>
+   108→            {user ? (
+   109→              <div className="flex items-center gap-1.5">
+   110→                <button onClick={() => onNavigate(user.role === 'admin' ? 'admin-dashboard' : 'student-dashboard')} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#C8A951]/10 text-[#C8A951] text-xs border border-[#C8A951]/20 relative">
+   111→                  <LayoutDashboard className="w-3.5 h-3.5" /><span className="hidden sm:inline">{user.role === 'admin' ? t(locale, 'nav.admin') : t(locale, 'nav.dashboard')}</span>
+   112→                  {unreadCount > 0 && <span className="absolute -top-1 -end-1 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] flex items-center justify-center font-bold">{unreadCount}</span>}
+   113→                </button>
+   114→                <button onClick={onLogout} className="p-1.5 rounded-lg text-white/60 hover:text-red-400"><LogOut className="w-3.5 h-3.5" /></button>
+   115→              </div>
+   116→            ) : (
+   117→              <button onClick={() => onNavigate('login')} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#C8A951] text-[#0D1B2A] font-bold text-xs shadow-lg shadow-[#C8A951]/20"><LogIn className="w-3.5 h-3.5" /><span className="hidden sm:inline">{t(locale, 'nav.login')}</span></button>
+   118→            )}
+   119→            <button onClick={() => setMobileOpen(!mobileOpen)} className="lg:hidden p-1.5 rounded-lg text-white hover:bg-white/10">{mobileOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}</button>
+   120→          </div>
+   121→        </div>
+   122→      </div>
+   123→      <AnimatePresence>{mobileOpen && (<motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="lg:hidden bg-[#0D1B2A] border-t border-white/10 overflow-hidden"><div className="px-4 py-3 space-y-1">{navLinks.map((link) => (<button key={link.key} onClick={() => { onNavigate(link.key as AppView); setMobileOpen(false); }} className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${currentView === link.key ? 'bg-[#C8A951]/10 text-[#C8A951]' : 'text-white/70'}`}><link.icon className="w-4 h-4" />{link.label}</button>))}</div></motion.div>)}</AnimatePresence>
+   124→    </header>
+   125→  );
+   126→}
+   127→
+   128→// ==================== SIDEBAR ====================
+   129→
+   130→function Sidebar({ items, activeTab, onTabChange, collapsed, onToggle, locale }: {
+   131→  items: { key: string; label: string; icon: any; badge?: number }[];
+   132→  activeTab: string; onTabChange: (key: string) => void;
+   133→  collapsed: boolean; onToggle: () => void; locale: Locale;
+   134→}) {
+   135→  const dir = localeDirection[locale];
+   136→  return (
+   137→    <aside className={`hidden md:flex flex-col bg-[#0D1B2A] text-white transition-all duration-300 ${collapsed ? 'w-16' : 'w-56'} shrink-0`} style={{ direction: dir }}>
+   138→      <div className="p-3 flex items-center justify-between border-b border-white/10">
+   139→        {!collapsed && <span className="text-[#C8A951] text-xs font-bold" style={{ fontFamily: 'var(--font-cairo)' }}>INC ALG 3</span>}
+   140→        <button onClick={onToggle} className="p-1.5 rounded-lg hover:bg-white/10 text-white/60">{collapsed ? <PanelLeftOpen className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}</button>
+   141→      </div>
+   142→      <nav className="flex-1 p-2 space-y-1">
+   143→        {items.map((item) => (
+   144→          <button key={item.key} onClick={() => onTabChange(item.key)}
+   145→            className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${activeTab === item.key ? 'bg-[#C8A951]/15 text-[#C8A951]' : 'text-white/60 hover:bg-white/5 hover:text-white/90'}`}>
+   146→            <item.icon className="w-4.5 h-4.5 shrink-0" />
+   147→            {!collapsed && <span className="truncate">{item.label}</span>}
+   148→            {!collapsed && item.badge && item.badge > 0 && <span className="ms-auto w-5 h-5 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center font-bold">{item.badge}</span>}
+   149→          </button>
+   150→        ))}
+   151→      </nav>
+   152→    </aside>
+   153→  );
+   154→}
+   155→
+   156→// ==================== LANDING PAGE ====================
+   157→
+   158→function LandingPage({ locale, onNavigate }: { locale: Locale; onNavigate: (v: AppView) => void }) {
+   159→  const { editableStats } = useAppStore();
+   160→  const dir = localeDirection[locale];
+   161→  return (
+   162→    <div style={{ direction: dir }}>
+   163→      {/* Hero */}
+   164→      <section className="relative min-h-[80vh] flex items-center overflow-hidden" style={{ background: 'linear-gradient(135deg, #0D1B2A 0%, #1B3A6B 50%, #0F2140 100%)' }}>
+   165→        <div className="absolute inset-0 opacity-10"><svg width="100%" height="100%"><defs><pattern id="dots" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.5" fill="#C8A951"/></pattern></defs><rect width="100%" height="100%" fill="url(#dots)"/></svg></div>
+   166→        <div className="absolute top-20 start-20 w-72 h-72 bg-[#C8A951]/10 rounded-full blur-3xl" />
+   167→        <div className="absolute bottom-20 end-20 w-96 h-96 bg-[#2952A3]/20 rounded-full blur-3xl" />
+   168→        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-20">
+   169→          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} className="text-center">
+   170→            <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.2 }} className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#C8A951]/10 border border-[#C8A951]/20 text-[#E4C97A] text-sm mb-8"><Sparkles className="w-4 h-4" />{t(locale, 'brandFull')}</motion.div>
+   171→            <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="text-6xl sm:text-7xl md:text-8xl font-black text-white mb-4" style={{ fontFamily: 'var(--font-cairo)' }}>INC <span className="text-[#C8A951]">ALG 3</span></motion.h1>
+   172→            <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="text-xl sm:text-2xl text-[#E4C97A] font-bold mb-6" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'hero.subtitle')}</motion.p>
+   173→            <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="text-lg text-white/70 max-w-2xl mx-auto mb-10">{t(locale, 'hero.description')}</motion.p>
+   174→            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} className="flex flex-wrap gap-4 justify-center">
+   175→              <button onClick={() => onNavigate('submit-project')} className="group px-8 py-4 rounded-2xl bg-[#C8A951] text-[#0D1B2A] font-bold text-lg hover:bg-[#E4C97A] transition-all shadow-xl shadow-[#C8A951]/25 flex items-center gap-3 animate-pulse-gold"><Rocket className="w-5 h-5" />{t(locale, 'hero.cta1')}<ArrowRight className="w-5 h-5 group-hover:translate-x-1 rtl-flip transition-transform" /></button>
+   176→              <button onClick={() => onNavigate('projects')} className="px-8 py-4 rounded-2xl border-2 border-white/20 text-white font-bold text-lg hover:bg-white/5 hover:border-white/40 transition-all flex items-center gap-3"><Eye className="w-5 h-5" />{t(locale, 'hero.cta2')}</button>
+   177→            </motion.div>
+   178→          </motion.div>
+   179→        </div>
+   180→        <div className="absolute bottom-0 w-full"><svg viewBox="0 0 1440 100" fill="none"><path d="M0,60 C360,100 720,20 1440,60 L1440,100 L0,100 Z" fill="#F5F7FA"/></svg></div>
+   181→      </section>
+   182→
+   183→      {/* Stats - Uses editableStats from store */}
+   184→      <section className="py-16 bg-[#F5F7FA]">
+   185→        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+   186→          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+   187→            {[
+   188→              { value: editableStats.totalSubmitted, label: t(locale, 'stats.projectsRegistered'), icon: FileText, color: '#1B3A6B' },
+   189→              { value: editableStats.accepted, label: t(locale, 'stats.accepted'), icon: Check, color: '#27AE60' },
+   190→              { value: editableStats.evaluating, label: t(locale, 'stats.evaluating'), icon: ClipboardCheck, color: '#F39C12' },
+   191→              { value: editableStats.startups, label: t(locale, 'stats.startups'), icon: Rocket, color: '#C8A951' },
+   192→            ].map((stat, i) => (
+   193→              <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} viewport={{ once: true }} className="bg-white rounded-2xl p-6 shadow-md hover:shadow-xl transition-all border border-slate-100 text-center group">
+   194→                <div className="w-14 h-14 rounded-2xl mx-auto mb-3 flex items-center justify-center" style={{ backgroundColor: `${stat.color}15` }}><stat.icon className="w-7 h-7" style={{ color: stat.color }} /></div>
+   195→                <div className="text-3xl font-black mb-1" style={{ fontFamily: 'var(--font-cairo)', color: stat.color }}><AnimatedCounter target={stat.value} /></div>
+   196→                <div className="text-sm text-slate-600">{stat.label}</div>
+   197→              </motion.div>
+   198→            ))}
+   199→          </div>
+   200→        </div>
+   201→      </section>
+   202→
+   203→      {/* How It Works */}
+   204→      <section className="py-20 bg-white">
+   205→        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+   206→          <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="text-center mb-14">
+   207→            <h2 className="text-4xl font-black text-[#1B3A6B] mb-3" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'howItWorks.title')}</h2>
+   208→            <p className="text-slate-600 text-lg">{t(locale, 'howItWorks.subtitle')}</p>
+   209→          </motion.div>
+   210→          <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+   211→            {(['step1', 'step2', 'step3', 'step4', 'step5'] as const).map((step, i) => {
+   212→              const icons = [Lightbulb, ClipboardCheck, GraduationCap, Rocket, Banknote];
+   213→              const colors = ['#C8A951', '#1B3A6B', '#2E7D32', '#2952A3', '#E67E22'];
+   214→              return (
+   215→                <motion.div key={step} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.15 }} viewport={{ once: true }} className="relative text-center group">
+   216→                  <div className="relative z-10">
+   217→                    <div className="w-20 h-20 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform" style={{ background: `linear-gradient(135deg, ${colors[i]}15, ${colors[i]}25)` }}>
+   218→                      {React.createElement(icons[i], { className: 'w-9 h-9', style: { color: colors[i] } })}
+   219→                      <span className="absolute -top-2 -end-2 w-7 h-7 rounded-full text-white text-xs font-bold flex items-center justify-center shadow-md" style={{ backgroundColor: colors[i] }}>{i + 1}</span>
+   220→                    </div>
+   221→                    <h3 className="font-bold text-[#1B3A6B] mb-2" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, `howItWorks.${step}.title`)}</h3>
+   222→                    <p className="text-sm text-slate-500">{t(locale, `howItWorks.${step}.desc`)}</p>
+   223→                  </div>
+   224→                </motion.div>
+   225→              );
+   226→            })}
+   227→          </div>
+   228→        </div>
+   229→      </section>
+   230→
+   231→      {/* Services */}
+   232→      <section className="py-20 bg-[#F5F7FA]">
+   233→        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+   234→          <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="text-center mb-14">
+   235→            <h2 className="text-4xl font-black text-[#1B3A6B] mb-3" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'services.title')}</h2>
+   236→            <p className="text-slate-600 text-lg">{t(locale, 'services.subtitle')}</p>
+   237→          </motion.div>
+   238→          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+   239→            {(['s1', 's2', 's3', 's4', 's5', 's6'] as const).map((s, i) => {
+   240→              const icons = [GraduationCap, Target, Zap, Award, Banknote, Shield];
+   241→              const colors = ['#1B3A6B', '#2E7D32', '#C8A951', '#2952A3', '#E67E22', '#C0392B'];
+   242→              return (
+   243→                <motion.div key={s} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} viewport={{ once: true }} className="bg-white rounded-2xl p-6 shadow-md hover:shadow-xl transition-all border border-slate-100 group hover:-translate-y-1">
+   244→                  <div className="w-14 h-14 rounded-2xl mb-4 flex items-center justify-center group-hover:scale-110 transition-transform" style={{ backgroundColor: `${colors[i]}12` }}>{React.createElement(icons[i], { className: 'w-7 h-7', style: { color: colors[i] } })}</div>
+   245→                  <h3 className="text-lg font-bold text-[#1B3A6B] mb-2" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, `services.${s}.title`)}</h3>
+   246→                  <p className="text-sm text-slate-500">{t(locale, `services.${s}.desc`)}</p>
+   247→                </motion.div>
+   248→              );
+   249→            })}
+   250→          </div>
+   251→        </div>
+   252→      </section>
+   253→
+   254→      {/* About */}
+   255→      <section className="py-20 bg-white">
+   256→        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+   257→          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+   258→            <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
+   259→              <h2 className="text-4xl font-black text-[#1B3A6B] mb-3" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'about.title')}</h2>
+   260→              <p className="text-[#C8A951] font-bold text-lg mb-6">{t(locale, 'about.subtitle')}</p>
+   261→              <div className="space-y-4 text-slate-600 leading-relaxed"><p>{t(locale, 'about.p1')}</p><p>{t(locale, 'about.p2')}</p><p>{t(locale, 'about.p3')}</p></div>
+   262→              <div className="mt-6 space-y-2">{[{ icon: Users, text: t(locale, 'about.director') }, { icon: Building2, text: t(locale, 'about.established') }, { icon: Award, text: t(locale, 'about.official') }].map((item, i) => (<div key={i} className="flex items-center gap-3 text-slate-700"><item.icon className="w-5 h-5 text-[#C8A951]" /><span className="font-medium">{item.text}</span></div>))}</div>
+   263→            </motion.div>
+   264→            <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="bg-gradient-to-br from-[#1B3A6B] to-[#0F2140] rounded-3xl p-8 text-white">
+   265→              <div className="text-center mb-6"><div className="w-20 h-20 rounded-2xl mx-auto mb-4 bg-[#C8A951]/20 flex items-center justify-center"><Building2 className="w-10 h-10 text-[#C8A951]" /></div><h3 className="text-2xl font-black" style={{ fontFamily: 'var(--font-cairo)' }}>INC ALG 3</h3></div>
+   266→              <div className="grid grid-cols-2 gap-4">{[{ value: '50,000+', label: locale === 'ar' ? 'طالب' : 'Students' }, { value: '4', label: locale === 'ar' ? 'كليات' : 'Faculties' }, { value: '11+', label: locale === 'ar' ? 'دفعات' : 'Batches' }, { value: '1,800+', label: locale === 'ar' ? 'مشروع' : 'Projects' }].map((item, i) => (<div key={i} className="bg-white/5 rounded-xl p-4 text-center"><div className="text-2xl font-black text-[#E4C97A]" style={{ fontFamily: 'var(--font-cairo)' }}>{item.value}</div><div className="text-sm text-white/70">{item.label}</div></div>))}</div>
+   267→            </motion.div>
+   268→          </div>
+   269→        </div>
+   270→      </section>
+   271→
+   272→      {/* Partners */}
+   273→      <section className="py-20 bg-[#F5F7FA]">
+   274→        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+   275→          <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="text-center mb-12">
+   276→            <h2 className="text-4xl font-black text-[#1B3A6B] mb-3" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'partners.title')}</h2>
+   277→            <p className="text-slate-600 text-lg">{t(locale, 'partners.subtitle')}</p>
+   278→          </motion.div>
+   279→          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">{MOCK_PARTNERS.map((partner, i) => (<motion.div key={partner.id} initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.05 }} viewport={{ once: true }} className="bg-white rounded-2xl p-5 text-center hover:shadow-lg transition-all border border-slate-100 hover:-translate-y-1"><div className="text-3xl mb-2">{partner.logo}</div><p className="text-sm font-bold text-slate-700" style={{ fontFamily: 'var(--font-cairo)' }}>{locale === 'ar' ? partner.nameAr : locale === 'fr' ? partner.nameFr : partner.nameEn}</p></motion.div>))}</div>
+   280→        </div>
+   281→      </section>
+   282→
+   283→      {/* CTA */}
+   284→      <section className="py-20" style={{ background: 'linear-gradient(135deg, #0D1B2A 0%, #1B3A6B 50%, #0F2140 100%)' }}>
+   285→        <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
+   286→          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+   287→            <h2 className="text-4xl font-black text-white mb-4" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'cta.title')}</h2>
+   288→            <p className="text-lg text-white/70 mb-8">{t(locale, 'cta.subtitle')}</p>
+   289→            <button onClick={() => onNavigate('submit-project')} className="px-10 py-5 rounded-2xl bg-[#C8A951] text-[#0D1B2A] font-black text-xl hover:bg-[#E4C97A] transition-all shadow-2xl shadow-[#C8A951]/30 flex items-center gap-3 mx-auto"><Rocket className="w-6 h-6" />{t(locale, 'cta.button')}</button>
+   290→          </motion.div>
+   291→        </div>
+   292→      </section>
+   293→
+   294→      {/* Footer */}
+   295→      <footer className="bg-[#0D1B2A] text-white py-12">
+   296→        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+   297→          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+   298→            <div><div className="flex items-center gap-3 mb-4"><div className="w-10 h-10 rounded-xl bg-[#C8A951] flex items-center justify-center"><Building2 className="w-5 h-5 text-[#0D1B2A]" /></div><span className="text-xl font-black" style={{ fontFamily: 'var(--font-cairo)' }}>INC ALG 3</span></div><p className="text-white/60 text-sm">{t(locale, 'about.p2').substring(0, 120)}...</p></div>
+   299→            <div><h4 className="font-bold text-[#C8A951] mb-4" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'footer.quickLinks')}</h4><div className="space-y-2">{[{ key: 'landing', label: t(locale, 'nav.home') }, { key: 'projects', label: t(locale, 'nav.projects') }, { key: 'submit-project', label: t(locale, 'nav.submit') }].map((link) => (<button key={link.key} onClick={() => { onNavigate(link.key as AppView); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="block text-white/60 hover:text-[#E4C97A] transition-colors text-sm">{link.label}</button>))}</div></div>
+   300→            <div><h4 className="font-bold text-[#C8A951] mb-4" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'footer.contactUs')}</h4>
+   301→              <div className="space-y-3">
+   302→                <div className="flex items-center gap-2 text-white/60 text-sm"><MapPin className="w-4 h-4 text-[#C8A951]" />{t(locale, 'footer.address')}</div>
+   303→                <div className="flex items-center gap-2 text-white/60 text-sm"><Mail className="w-4 h-4 text-[#C8A951]" />{t(locale, 'footer.email')}</div>
+   304→                <div className="flex items-center gap-2 text-white/60 text-sm"><Phone className="w-4 h-4 text-[#C8A951]" />{t(locale, 'footer.phone')}</div>
+   305→              </div>
+   306→              <div className="flex gap-3 mt-4">
+   307→                <a href="https://www.facebook.com/p/%D8%AD%D8%A7%D8%B6%D9%86%D8%A9-%D8%A7%D9%84%D8%A3%D8%B9%D9%85%D8%A7%D9%84-%D9%84%D8%AC%D8%A7%D9%85%D8%B9%D8%A9-%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B13-100087801578310/?locale=ar_AR" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-xl bg-white/5 hover:bg-[#C8A951]/20 flex items-center justify-center transition-colors"><Facebook className="w-5 h-5 text-white/60 hover:text-[#C8A951]" /></a>
+   308→                <a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-xl bg-white/5 hover:bg-[#C8A951]/20 flex items-center justify-center transition-colors"><Instagram className="w-5 h-5 text-white/60" /></a>
+   309→                <a href="https://www.youtube.com" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-xl bg-white/5 hover:bg-[#C8A951]/20 flex items-center justify-center transition-colors"><Youtube className="w-5 h-5 text-white/60" /></a>
+   310→              </div>
+   311→            </div>
+   312→          </div>
+   313→          <div className="border-t border-white/10 pt-6 text-center text-white/40 text-sm">{t(locale, 'footer.rights')}</div>
+   314→        </div>
+   315→      </footer>
+   316→    </div>
+   317→  );
+   318→}
+   319→
+   320→// ==================== AUTH PAGE ====================
+   321→
+   322→function AuthPage({ locale, onNavigate, onLogin }: { locale: Locale; onNavigate: (v: AppView) => void; onLogin: (user: any) => void }) {
+   323→  const [isLogin, setIsLogin] = useState(true);
+   324→  const [email, setEmail] = useState('');
+   325→  const [password, setPassword] = useState('');
+   326→  const [name, setName] = useState('');
+   327→  const [phone, setPhone] = useState('');
+   328→  const [faculty, setFaculty] = useState('');
+   329→  const [level, setLevel] = useState('');
+   330→  const [loading, setLoading] = useState(false);
+   331→  const dir = localeDirection[locale];
+   332→
+   333→  const handleSubmit = (e: React.FormEvent) => {
+   334→    e.preventDefault();
+   335→    setLoading(true);
+   336→    setTimeout(() => {
+   337→      if (isLogin && email === ADMIN_CREDENTIALS.email && password === ADMIN_CREDENTIALS.password) {
+   338→        onLogin({ id: 'admin-001', email, name: locale === 'ar' ? 'المدير العام' : 'Admin', role: 'admin' });
+   339→        toast.success(locale === 'ar' ? 'تم تسجيل الدخول بنجاح' : 'Login successful');
+   340→        onNavigate('admin-dashboard');
+   341→      } else if (isLogin && email === STUDENT_CREDENTIALS.email && password === STUDENT_CREDENTIALS.password) {
+   342→        const matchingProject = MOCK_PROJECTS.find(p => p.ownerEmail === email);
+   343→        onLogin({ id: 'student-001', email, name: matchingProject?.ownerName || email.split('@')[0], role: 'student', faculty: matchingProject?.faculty, level: matchingProject?.level });
+   344→        toast.success(locale === 'ar' ? 'تم تسجيل الدخول كطالب بنجاح' : 'Student login successful');
+   345→        onNavigate('student-dashboard');
+   346→      } else if (isLogin && email && password) {
+   347→        const matchingProject = MOCK_PROJECTS.find(p => p.ownerEmail === email);
+   348→        onLogin({ id: 'student-001', email, name: matchingProject?.ownerName || email.split('@')[0], role: 'student', faculty: matchingProject?.faculty, level: matchingProject?.level });
+   349→        toast.success(locale === 'ar' ? 'تم تسجيل الدخول بنجاح' : 'Login successful');
+   350→        onNavigate('student-dashboard');
+   351→      } else if (!isLogin) {
+   352→        onLogin({ id: 'student-new', email, name: name || email.split('@')[0], role: 'student', phone, faculty, level });
+   353→        toast.success(locale === 'ar' ? 'تم إنشاء الحساب' : 'Account created');
+   354→        onNavigate('student-dashboard');
+   355→      } else {
+   356→        toast.error(locale === 'ar' ? 'بيانات غير صحيحة' : 'Invalid credentials');
+   357→      }
+   358→      setLoading(false);
+   359→    }, 600);
+   360→  };
+   361→
+   362→  return (
+   363→    <div className="min-h-screen flex items-center justify-center py-12 px-4" style={{ background: 'linear-gradient(135deg, #0D1B2A 0%, #1B3A6B 50%, #0F2140 100%)', direction: dir }}>
+   364→      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-md">
+   365→        <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
+   366→          <div className="p-8 bg-gradient-to-r from-[#1B3A6B] to-[#0F2140] text-center">
+   367→            <div className="w-16 h-16 rounded-2xl mx-auto mb-4 bg-[#C8A951] flex items-center justify-center"><Building2 className="w-8 h-8 text-[#0D1B2A]" /></div>
+   368→            <h2 className="text-2xl font-black text-white" style={{ fontFamily: 'var(--font-cairo)' }}>{isLogin ? t(locale, 'auth.loginTitle') : t(locale, 'auth.registerTitle')}</h2>
+   369→          </div>
+   370→          <form onSubmit={handleSubmit} className="p-8 space-y-4">
+   371→            {!isLogin && <div><label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'auth.name')}</label><input type="text" value={name} onChange={(e) => setName(e.target.value)} required className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm" /></div>}
+   372→            <div><label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'auth.email')}</label><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="example@univ-alger3.dz" className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm" /></div>
+   373→            <div><label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'auth.password')}</label><input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="••••••••" className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm" /></div>
+   374→            {!isLogin && (<><div><label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'auth.phone')}</label><input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="05XXXXXXXX" className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm" /></div>
+   375→            <div><label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'auth.faculty')}</label><select value={faculty} onChange={(e) => setFaculty(e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm bg-white"><option value="">{t(locale, 'auth.faculty')}</option>{(['eco', 'info', 'pol', 'sport'] as const).map((f) => (<option key={f} value={f}>{t(locale, `faculties.${f}`)}</option>))}</select></div>
+   376→            <div><label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'auth.level')}</label><select value={level} onChange={(e) => setLevel(e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm bg-white"><option value="">{t(locale, 'auth.level')}</option>{(['l1', 'l2', 'l3', 'm1', 'm2', 'phd'] as const).map((l) => (<option key={l} value={l}>{t(locale, `levels.${l}`)}</option>))}</select></div></>)}
+   377→            <button type="submit" disabled={loading} className="w-full py-4 rounded-xl bg-[#1B3A6B] text-white font-bold text-lg hover:bg-[#2952A3] transition-all disabled:opacity-50 flex items-center justify-center gap-2">{loading ? <RefreshCw className="w-5 h-5 animate-spin" /> : <LogIn className="w-5 h-5" />}{isLogin ? t(locale, 'auth.loginBtn') : t(locale, 'auth.registerBtn')}</button>
+   378→            {isLogin && (
+   379→              <div className="flex gap-3 pt-2">
+   380→                <button type="button" onClick={() => { setEmail(ADMIN_CREDENTIALS.email); setPassword(ADMIN_CREDENTIALS.password); }} className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#1B3A6B]/5 hover:bg-[#1B3A6B]/10 text-[#1B3A6B] text-xs font-bold border border-[#1B3A6B]/10 transition-all hover:border-[#1B3A6B]/30">
+   381→                  <Shield className="w-3.5 h-3.5" />{t(locale, 'auth.adminLogin')}
+   382→                </button>
+   383→                <button type="button" onClick={() => { setEmail(STUDENT_CREDENTIALS.email); setPassword(STUDENT_CREDENTIALS.password); }} className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#2E7D32]/5 hover:bg-[#2E7D32]/10 text-[#2E7D32] text-xs font-bold border border-[#2E7D32]/10 transition-all hover:border-[#2E7D32]/30">
+   384→                  <GraduationCap className="w-3.5 h-3.5" />{t(locale, 'auth.studentLogin')}
+   385→                </button>
+   386→              </div>
+   387→            )}
+   388→            <div className="text-center pt-4 border-t border-slate-100"><button type="button" onClick={() => setIsLogin(!isLogin)} className="text-[#1B3A6B] font-bold text-sm hover:underline">{isLogin ? t(locale, 'auth.noAccount') : t(locale, 'auth.hasAccount')}</button></div>
+   389→          </form>
+   390→        </div>
+   391→      </motion.div>
+   392→    </div>
+   393→  );
+   394→}
+   395→
+   396→// ==================== PROJECTS PAGE ====================
+   397→
+   398→function ProjectsPage({ locale, onNavigate }: { locale: Locale; onNavigate: (v: AppView) => void }) {
+   399→  const [filter, setFilter] = useState('all');
+   400→  const [search, setSearch] = useState('');
+   401→  const { setSelectedProjectId } = useAppStore();
+   402→  const dir = localeDirection[locale];
+   403→  const filtered = MOCK_PROJECTS.filter((p) => { if (filter !== 'all' && p.field !== filter) return false; if (search && !p.projectName.includes(search) && !p.ownerName.includes(search)) return false; return true; });
+   404→
+   405→  return (
+   406→    <div className="min-h-screen bg-[#F5F7FA] py-8" style={{ direction: dir }}>
+   407→      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+   408→        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8"><h1 className="text-3xl font-black text-[#1B3A6B] mb-2" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'projectsPage.title')}</h1><p className="text-slate-600">{t(locale, 'projectsPage.subtitle')}</p></motion.div>
+   409→        <div className="flex flex-wrap gap-3 mb-6 items-center">
+   410→          <div className="relative flex-1 min-w-[200px] max-w-sm"><Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" /><input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t(locale, 'projectsPage.search')} className="w-full ps-10 pe-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm bg-white" /></div>
+   411→          <div className="flex gap-2 flex-wrap">{[{ key: 'all', label: t(locale, 'projectsPage.all') }, ...(['ict', 'digital', 'energy', 'ecommerce', 'minerals', 'industry'] as const).map((f) => ({ key: f, label: t(locale, `fields.${f}`) }))].map((f) => (<button key={f.key} onClick={() => setFilter(f.key)} className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${filter === f.key ? 'bg-[#1B3A6B] text-white shadow-md' : 'bg-white text-slate-600 border border-slate-200'}`}>{f.label}</button>))}</div>
+   412→        </div>
+   413→        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+   414→          {filtered.map((project, i) => (
+   415→            <motion.div key={project.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="bg-white rounded-2xl p-6 shadow-md hover:shadow-xl transition-all border border-slate-100 group hover:-translate-y-1 cursor-pointer" onClick={() => { setSelectedProjectId(project.id); onNavigate('project-detail'); }}>
+   416→              <div className="flex items-start justify-between mb-3"><FieldBadge field={project.field} locale={locale} /><StatusBadge status={project.status} locale={locale} /></div>
+   417→              <h3 className="text-lg font-bold text-[#1B3A6B] mb-2" style={{ fontFamily: 'var(--font-cairo)' }}>{locale === 'ar' ? project.projectName : project.projectNameEn}</h3>
+   418→              <p className="text-sm text-slate-500 mb-4 line-clamp-2">{project.description}</p>
+   419→              <div className="flex items-center justify-between text-xs text-slate-400 pt-3 border-t border-slate-100"><span className="flex items-center gap-1"><Users className="w-3 h-3" />{project.ownerName}</span><span className="font-mono">{project.refNumber}</span></div>
+   420→            </motion.div>
+   421→          ))}
+   422→        </div>
+   423→      </div>
+   424→    </div>
+   425→  );
+   426→}
+   427→
+   428→// ==================== PROJECT DETAIL ====================
+   429→
+   430→function ProjectDetail({ locale, onNavigate }: { locale: Locale; onNavigate: (v: AppView) => void }) {
+   431→  const { selectedProjectId } = useAppStore();
+   432→  const project = MOCK_PROJECTS.find((p) => p.id === selectedProjectId);
+   433→  const dir = localeDirection[locale];
+   434→  if (!project) return <div className="min-h-screen flex items-center justify-center text-slate-400" style={{ direction: dir }}><FileText className="w-12 h-12 mr-3 opacity-50" />{t(locale, 'common.noData')}</div>;
+   435→
+   436→  const statusStepMap: Record<string, number> = { review: 0, committee: 1, accepted: 2, revision: 1, incubated: 4, rejected: -1 };
+   437→  const currentStep = statusStepMap[project.status] ?? 0;
+   438→
+   439→  return (
+   440→    <div className="min-h-screen bg-[#F5F7FA] py-8" style={{ direction: dir }}>
+   441→      <div className="max-w-5xl mx-auto px-4 sm:px-6">
+   442→        <button onClick={() => onNavigate('projects')} className="flex items-center gap-2 text-[#1B3A6B] font-bold mb-6 hover:underline"><ArrowRight className="w-4 h-4 rtl-flip" />{t(locale, 'admin.backToProjects')}</button>
+   443→
+   444→        <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-6">
+   445→          <div className="p-8" style={{ background: 'linear-gradient(135deg, #0D1B2A, #1B3A6B)' }}>
+   446→            <div className="flex flex-wrap items-center gap-3 mb-4"><FieldBadge field={project.field} locale={locale} /><StatusBadge status={project.status} locale={locale} /><span className="text-white/50 text-sm font-mono">{project.refNumber}</span></div>
+   447→            <h1 className="text-3xl font-black text-white mb-2" style={{ fontFamily: 'var(--font-cairo)' }}>{locale === 'ar' ? project.projectName : project.projectNameEn}</h1>
+   448→            <p className="text-white/60">{project.ownerName} • {project.ownerEmail}</p>
+   449→          </div>
+   450→
+   451→          <div className="p-6 sm:p-8">
+   452→            <h3 className="text-lg font-bold text-[#1B3A6B] mb-4" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'projectDetail.overview')}</h3>
+   453→            <p className="text-slate-600 leading-relaxed mb-6">{project.description}</p>
+   454→
+   455→            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+   456→              <div className="space-y-4">
+   457→                <h4 className="font-bold text-[#1B3A6B]" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'projectDetail.information')}</h4>
+   458→                {[
+   459→                  { label: t(locale, 'projectSubmit.problem'), value: project.problem },
+   460→                  { label: t(locale, 'projectSubmit.targetAudience'), value: project.targetAudience },
+   461→                  { label: t(locale, 'projectSubmit.addedValue'), value: project.addedValue },
+   462→                  { label: t(locale, 'projectSubmit.legalFramework'), value: project.legalFramework },
+   463→                  { label: t(locale, 'projectSubmit.tradeName'), value: project.tradeName },
+   464→                ].map((item, i) => (<div key={i}><span className="text-xs text-slate-400">{item.label}</span><p className="text-sm text-slate-700 font-medium">{item.value}</p></div>))}
+   465→              </div>
+   466→              <div className="space-y-4">
+   467→                <h4 className="font-bold text-[#1B3A6B]" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'projectDetail.financial')}</h4>
+   468→                <div className="bg-[#F5F7FA] rounded-xl p-4 space-y-3">
+   469→                  {[
+   470→                    { label: t(locale, 'projectSubmit.fundingRequired'), value: `${project.fundingRequired.toLocaleString()} د.ج` },
+   471→                    { label: t(locale, 'projectSubmit.stage'), value: t(locale, `stages.${project.stage}`) },
+   472→                    { label: t(locale, 'projectSubmit.hasPartner'), value: project.hasPartner ? '✓' : '✗' },
+   473→                    { label: t(locale, 'projectSubmit.teamSize'), value: String(project.teamSize) },
+   474→                    { label: t(locale, 'admin.score'), value: project.score ? String(project.score) + '/100' : t(locale, 'projectDetail.noScore') },
+   475→                  ].map((item, i) => (<div key={i} className="flex justify-between"><span className="text-sm text-slate-500">{item.label}</span><span className="text-sm font-bold text-[#1B3A6B]">{item.value}</span></div>))}
+   476→                </div>
+   477→              </div>
+   478→            </div>
+   479→
+   480→            {/* Timeline */}
+   481→            {project.timeline && (
+   482→              <div>
+   483→                <h4 className="font-bold text-[#1B3A6B] mb-4" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'projectDetail.timeline')}</h4>
+   484→                <div className="space-y-3">
+   485→                  {project.timeline.map((event: any, i: number) => (
+   486→                    <div key={i} className="flex items-start gap-3">
+   487→                      <div className="flex flex-col items-center"><div className={`w-8 h-8 rounded-full flex items-center justify-center ${i <= currentStep ? 'bg-[#1B3A6B] text-white' : 'bg-slate-200 text-slate-400'}`}><Check className="w-4 h-4" /></div>{i < project.timeline.length - 1 && <div className="w-0.5 h-8 bg-slate-200" />}</div>
+   488→                      <div><p className="font-medium text-slate-700 text-sm">{locale === 'ar' ? event.event : event.eventEn}</p><p className="text-xs text-slate-400">{new Date(event.date).toLocaleDateString(locale === 'ar' ? 'ar-DZ' : locale === 'fr' ? 'fr-DZ' : 'en')}</p></div>
+   489→                    </div>
+   490→                  ))}
+   491→                </div>
+   492→              </div>
+   493→            )}
+   494→
+   495→            {project.evaluationNotes && (<div className="mt-6 p-4 rounded-xl bg-[#C8A951]/5 border border-[#C8A951]/20"><p className="text-sm font-bold text-[#1B3A6B] mb-1">{t(locale, 'admin.notes')}</p><p className="text-sm text-slate-600">{project.evaluationNotes}</p></div>)}
+   496→          </div>
+   497→        </div>
+   498→      </div>
+   499→    </div>
+   500→  );
+   501→}
+   502→
+   503→// ==================== PROJECT SUBMIT ====================
+   504→
+   505→function ProjectSubmitPage({ locale, onNavigate, user }: { locale: Locale; onNavigate: (v: AppView) => void; user: any }) {
+   506→  const [step, setStep] = useState(1);
+   507→  const [submitted, setSubmitted] = useState(false);
+   508→  const [refNumber, setRefNumber] = useState('');
+   509→  const [form, setForm] = useState({ ownerName: '', email: user?.email || '', phone: '', projectName: '', field: 'ict', description: '', problem: '', targetAudience: '', addedValue: '', fundingRequired: 0, stage: 'idea', hasPartner: false, teamSize: 1, videoLink: '', legalFramework: 'مؤسسة ناشئة', tradeName: '', academicYear: '2024/2025', department: '' });
+   510→  const dir = localeDirection[locale];
+   511→  const updateForm = (key: string, value: any) => setForm((prev) => ({ ...prev, [key]: value }));
+   512→
+   513→  const handleSubmit = () => {
+   514→    const ref = `INC-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 999)).padStart(3, '0')}`;
+   515→    setRefNumber(ref);
+   516→    setSubmitted(true);
+   517→    toast.success(t(locale, 'projectSubmit.success'));
+   518→  };
+   519→
+   520→  if (submitted) {
+   521→    return (<div className="min-h-screen flex items-center justify-center py-12 px-4" style={{ background: 'linear-gradient(135deg, #0D1B2A 0%, #1B3A6B 50%, #0F2140 100%)', direction: dir }}><motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="bg-white rounded-3xl p-10 max-w-md w-full text-center shadow-2xl"><motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.2, type: 'spring' }} className="w-20 h-20 rounded-full mx-auto mb-6 bg-green-100 flex items-center justify-center"><Check className="w-10 h-10 text-green-600" /></motion.div><h2 className="text-2xl font-black text-[#1B3A6B] mb-2" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'projectSubmit.success')}</h2><div className="bg-[#1B3A6B] rounded-xl p-4 my-6"><p className="text-white/70 text-sm mb-1">{t(locale, 'projectSubmit.refNumber')}</p><p className="text-2xl font-black text-[#C8A951]" style={{ fontFamily: 'var(--font-cairo)' }}>{refNumber}</p></div><div className="flex gap-3"><button onClick={() => onNavigate('student-dashboard')} className="flex-1 py-3 rounded-xl bg-[#1B3A6B] text-white font-bold">{t(locale, 'projectSubmit.trackProject')}</button><button onClick={() => { setSubmitted(false); setStep(1); }} className="flex-1 py-3 rounded-xl border-2 border-[#1B3A6B] text-[#1B3A6B] font-bold">{t(locale, 'projectSubmit.submitAnother')}</button></div></motion.div></div>);
+   522→  }
+   523→
+   524→  return (
+   525→    <div className="min-h-screen bg-[#F5F7FA] py-8" style={{ direction: dir }}>
+   526→      <div className="max-w-2xl mx-auto px-4 sm:px-6">
+   527→        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8"><h1 className="text-3xl font-black text-[#1B3A6B] mb-2" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'projectSubmit.title')}</h1><p className="text-slate-600">{t(locale, 'projectSubmit.subtitle')}</p></motion.div>
+   528→        <div className="flex items-center gap-2 mb-8">
+   529→          {[1, 2, 3, 4].map((s) => (
+   530→            <React.Fragment key={s}>
+   531→              <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm transition-all ${s <= step ? 'bg-[#1B3A6B] text-white' : 'bg-slate-200 text-slate-400'}`}>{s}</div>
+   532→              {s < 4 && <div className={`flex-1 h-1 rounded ${s < step ? 'bg-[#1B3A6B]' : 'bg-slate-200'}`} />}
+   533→            </React.Fragment>
+   534→          ))}
+   535→        </div>
+   536→        <motion.div key={step} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="bg-white rounded-2xl p-6 sm:p-8 shadow-lg border border-slate-100">
+   537→          {step === 1 && (<div className="space-y-4">{[['ownerName', t(locale, 'projectSubmit.ownerName')], ['email', t(locale, 'projectSubmit.email')], ['phone', t(locale, 'projectSubmit.phone')], ['tradeName', t(locale, 'projectSubmit.tradeName')], ['academicYear', t(locale, 'projectSubmit.academicYear')], ['department', t(locale, 'projectSubmit.department')]].map(([key, label]) => (<div key={key}><label className="block text-sm font-bold text-slate-700 mb-1">{label} *</label><input type="text" value={(form as any)[key]} onChange={(e) => updateForm(key, e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none" /></div>))}</div>)}
+   538→          {step === 2 && (<div className="space-y-4"><div><label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'projectSubmit.projectName')} *</label><input type="text" value={form.projectName} onChange={(e) => updateForm('projectName', e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none" /></div><div><label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'projectSubmit.field')} *</label><div className="grid grid-cols-2 gap-2">{(['ict', 'digital', 'minerals', 'energy', 'industry', 'ecommerce', 'other'] as const).map((f) => (<button key={f} type="button" onClick={() => updateForm('field', f)} className={`px-4 py-3 rounded-xl text-sm font-medium transition-all border-2 ${form.field === f ? 'bg-[#1B3A6B] text-white border-[#1B3A6B]' : 'bg-white text-slate-600 border-slate-200'}`}>{t(locale, `fields.${f}`)}</button>))}</div></div><div><label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'projectSubmit.description')} *</label><textarea value={form.description} onChange={(e) => updateForm('description', e.target.value)} rows={4} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none resize-none" /></div><div><label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'projectSubmit.problem')} *</label><textarea value={form.problem} onChange={(e) => updateForm('problem', e.target.value)} rows={2} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none resize-none" /></div><div><label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'projectSubmit.targetAudience')} *</label><input type="text" value={form.targetAudience} onChange={(e) => updateForm('targetAudience', e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none" /></div><div><label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'projectSubmit.addedValue')} *</label><input type="text" value={form.addedValue} onChange={(e) => updateForm('addedValue', e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none" /></div></div>)}
+   539→          {step === 3 && (<div className="space-y-4"><div><label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'projectSubmit.legalFramework')}</label><select value={form.legalFramework} onChange={(e) => updateForm('legalFramework', e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none bg-white"><option value="مؤسسة ناشئة">{locale === 'ar' ? 'مؤسسة ناشئة' : 'Startup'}</option><option value="مؤسسة مصغرة">{locale === 'ar' ? 'مؤسسة مصغرة' : 'Micro-enterprise'}</option><option value="براءة اختراع">{locale === 'ar' ? 'براءة اختراع' : 'Patent'}</option></select></div><div><label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'projectSubmit.fundingRequired')} (DZD)</label><input type="number" value={form.fundingRequired} onChange={(e) => updateForm('fundingRequired', Number(e.target.value))} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none" /></div><div><label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'projectSubmit.stage')}</label><div className="flex gap-3">{(['idea', 'prototype', 'launched'] as const).map((s) => (<button key={s} type="button" onClick={() => updateForm('stage', s)} className={`flex-1 px-4 py-3 rounded-xl text-sm font-medium border-2 ${form.stage === s ? 'bg-[#1B3A6B] text-white border-[#1B3A6B]' : 'bg-white text-slate-600 border-slate-200'}`}>{t(locale, `stages.${s}`)}</button>))}</div></div><div className="flex items-center gap-3"><label className="text-sm font-bold text-slate-700">{t(locale, 'projectSubmit.hasPartner')}</label><button type="button" onClick={() => updateForm('hasPartner', !form.hasPartner)} className={`w-12 h-7 rounded-full transition-colors ${form.hasPartner ? 'bg-[#1B3A6B]' : 'bg-slate-300'}`}><div className={`w-5 h-5 rounded-full bg-white shadow transition-transform ${form.hasPartner ? 'translate-x-5 rtl:-translate-x-5' : ''}`} /></button></div><div><label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'projectSubmit.teamSize')}</label><input type="number" min={1} max={10} value={form.teamSize} onChange={(e) => updateForm('teamSize', Number(e.target.value))} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none" /></div><div><label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'projectSubmit.videoLink')}</label><input type="url" value={form.videoLink} onChange={(e) => updateForm('videoLink', e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none" /></div></div>)}
+   540→          {step === 4 && (<div className="bg-[#F5F7FA] rounded-xl p-6"><h3 className="font-bold text-[#1B3A6B] mb-4" style={{ fontFamily: 'var(--font-cairo)' }}>{form.projectName || '---'}</h3><div className="grid grid-cols-2 gap-3 text-sm">{[['ownerName', t(locale, 'projectSubmit.ownerName')], ['email', t(locale, 'projectSubmit.email')], ['field', t(locale, 'projectSubmit.field')], ['stage', t(locale, 'projectSubmit.stage')], ['legalFramework', t(locale, 'projectSubmit.legalFramework')], ['tradeName', t(locale, 'projectSubmit.tradeName')]].map(([key, label]) => (<div key={key}><span className="text-slate-400">{label}:</span><br/><span className="font-medium">{key === 'field' ? t(locale, `fields.${(form as any)[key]}`) : (form as any)[key]}</span></div>))}<div className="col-span-2"><span className="text-slate-400">{t(locale, 'projectSubmit.description')}:</span><br/><span className="font-medium">{form.description}</span></div></div></div>)}
+   541→          <div className="flex gap-3 mt-8">{step > 1 && <button type="button" onClick={() => setStep(step - 1)} className="px-6 py-3 rounded-xl border-2 border-slate-200 text-slate-600 font-bold flex items-center gap-2"><ChevronRight className="w-4 h-4 rtl-flip" />{t(locale, 'projectSubmit.prev')}</button>}{step < 4 ? <button type="button" onClick={() => setStep(step + 1)} className="flex-1 px-6 py-3 rounded-xl bg-[#1B3A6B] text-white font-bold flex items-center justify-center gap-2">{t(locale, 'projectSubmit.next')}<ChevronLeft className="w-4 h-4 rtl-flip" /></button> : <button type="button" onClick={handleSubmit} className="flex-1 px-6 py-3 rounded-xl bg-[#C8A951] text-[#0D1B2A] font-bold flex items-center justify-center gap-2 shadow-lg"><Send className="w-5 h-5" />{t(locale, 'projectSubmit.submit')}</button>}</div>
+   542→        </motion.div>
+   543→      </div>
+   544→    </div>
+   545→  );
+   546→}
+   547→
+   548→// ==================== BMC TOOL ====================
+   549→
+   550→function BMCTool({ locale, projectId }: { locale: Locale; projectId?: string }) {
+   551→  const { bmcData, setBmcData } = useAppStore();
+   552→  const dir = localeDirection[locale];
+   553→  const existingData = projectId ? bmcData[projectId] : null;
+   554→  const [bmc, setBmc] = useState<BMCBlock>(existingData || DEFAULT_BMC);
+   555→
+   556→  const updateBlock = (key: keyof BMCBlock, value: string) => {
+   557→    const updated = { ...bmc, [key]: value };
+   558→    setBmc(updated);
+   559→  };
+   560→
+   561→  const handleSave = () => {
+   562→    if (projectId) setBmcData(projectId, bmc);
+   563→    toast.success(t(locale, 'bmc.saved'));
+   564→  };
+   565→
+   566→  const blocks = [
+   567→    { key: 'keyPartners' as keyof BMCBlock, label: t(locale, 'bmc.keyPartners'), color: '#1B3A6B', icon: HandshakeIcon },
+   568→    { key: 'keyActivities' as keyof BMCBlock, label: t(locale, 'bmc.keyActivities'), color: '#2952A3', icon: Zap },
+   569→    { key: 'keyResources' as keyof BMCBlock, label: t(locale, 'bmc.keyResources'), color: '#2E7D32', icon: Briefcase },
+   570→    { key: 'valueProposition' as keyof BMCBlock, label: t(locale, 'bmc.valueProposition'), color: '#C8A951', icon: Star },
+   571→    { key: 'customerRelationships' as keyof BMCBlock, label: t(locale, 'bmc.customerRelationships'), color: '#E67E22', icon: Heart },
+   572→    { key: 'channels' as keyof BMCBlock, label: t(locale, 'bmc.channels'), color: '#F39C12', icon: ArrowRight },
+   573→    { key: 'customerSegments' as keyof BMCBlock, label: t(locale, 'bmc.customerSegments'), color: '#C0392B', icon: UsersRound },
+   574→    { key: 'costStructure' as keyof BMCBlock, label: t(locale, 'bmc.costStructure'), color: '#6B7280', icon: DollarSign },
+   575→    { key: 'revenueStreams' as keyof BMCBlock, label: t(locale, 'bmc.revenueStreams'), color: '#27AE60', icon: TrendingUp },
+   576→  ];
+   577→
+   578→  return (
+   579→    <div style={{ direction: dir }}>
+   580→      <div className="mb-6">
+   581→        <h2 className="text-2xl font-black text-[#1B3A6B] mb-1" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'bmc.title')}</h2>
+   582→        <p className="text-slate-500 text-sm">{t(locale, 'bmc.subtitle')}</p>
+   583→      </div>
+   584→
+   585→      {/* BMC Canvas Grid */}
+   586→      <div className="grid grid-cols-1 md:grid-cols-5 gap-3 mb-6">
+   587→        {/* Row 1: Key Partners (2 cols), Key Activities, Value Proposition (2 cols), Customer Relationships, Customer Segments (2 cols) */}
+   588→        <div className="md:col-span-2 md:row-span-2 bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+   589→          <div className="flex items-center gap-2 mb-2"><HandshakeIcon className="w-4 h-4" style={{ color: '#1B3A6B' }} /><span className="font-bold text-xs text-[#1B3A6B]">{t(locale, 'bmc.keyPartners')}</span></div>
+   590→          <textarea value={bmc.keyPartners} onChange={(e) => updateBlock('keyPartners', e.target.value)} className="w-full h-24 text-xs border-0 outline-none resize-none bg-transparent" placeholder={t(locale, 'bmc.placeholder')} />
+   591→        </div>
+   592→        <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+   593→          <div className="flex items-center gap-2 mb-2"><Zap className="w-4 h-4 text-[#2952A3]" /><span className="font-bold text-xs text-[#2952A3]">{t(locale, 'bmc.keyActivities')}</span></div>
+   594→          <textarea value={bmc.keyActivities} onChange={(e) => updateBlock('keyActivities', e.target.value)} className="w-full h-16 text-xs border-0 outline-none resize-none bg-transparent" placeholder={t(locale, 'bmc.placeholder')} />
+   595→        </div>
+   596→        <div className="md:row-span-2 bg-white rounded-xl p-4 shadow-sm border border-[#C8A951]/30">
+   597→          <div className="flex items-center gap-2 mb-2"><Star className="w-4 h-4 text-[#C8A951]" /><span className="font-bold text-xs text-[#C8A951]">{t(locale, 'bmc.valueProposition')}</span></div>
+   598→          <textarea value={bmc.valueProposition} onChange={(e) => updateBlock('valueProposition', e.target.value)} className="w-full h-28 text-xs border-0 outline-none resize-none bg-transparent" placeholder={t(locale, 'bmc.placeholder')} />
+   599→        </div>
+   600→        <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+   601→          <div className="flex items-center gap-2 mb-2"><Heart className="w-4 h-4 text-[#E67E22]" /><span className="font-bold text-xs text-[#E67E22]">{t(locale, 'bmc.customerRelationships')}</span></div>
+   602→          <textarea value={bmc.customerRelationships} onChange={(e) => updateBlock('customerRelationships', e.target.value)} className="w-full h-16 text-xs border-0 outline-none resize-none bg-transparent" placeholder={t(locale, 'bmc.placeholder')} />
+   603→        </div>
+   604→        <div className="md:col-span-1 md:row-span-2 bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+   605→          <div className="flex items-center gap-2 mb-2"><UsersRound className="w-4 h-4 text-[#C0392B]" /><span className="font-bold text-xs text-[#C0392B]">{t(locale, 'bmc.customerSegments')}</span></div>
+   606→          <textarea value={bmc.customerSegments} onChange={(e) => updateBlock('customerSegments', e.target.value)} className="w-full h-24 text-xs border-0 outline-none resize-none bg-transparent" placeholder={t(locale, 'bmc.placeholder')} />
+   607→        </div>
+   608→        {/* Row 2: Key Resources, Channels */}
+   609→        <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+   610→          <div className="flex items-center gap-2 mb-2"><Briefcase className="w-4 h-4 text-[#2E7D32]" /><span className="font-bold text-xs text-[#2E7D32]">{t(locale, 'bmc.keyResources')}</span></div>
+   611→          <textarea value={bmc.keyResources} onChange={(e) => updateBlock('keyResources', e.target.value)} className="w-full h-16 text-xs border-0 outline-none resize-none bg-transparent" placeholder={t(locale, 'bmc.placeholder')} />
+   612→        </div>
+   613→        <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+   614→          <div className="flex items-center gap-2 mb-2"><ArrowRight className="w-4 h-4 text-[#F39C12]" /><span className="font-bold text-xs text-[#F39C12]">{t(locale, 'bmc.channels')}</span></div>
+   615→          <textarea value={bmc.channels} onChange={(e) => updateBlock('channels', e.target.value)} className="w-full h-16 text-xs border-0 outline-none resize-none bg-transparent" placeholder={t(locale, 'bmc.placeholder')} />
+   616→        </div>
+   617→        {/* Row 3: Cost Structure, Revenue Streams */}
+   618→        <div className="md:col-span-2 bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+   619→          <div className="flex items-center gap-2 mb-2"><DollarSign className="w-4 h-4 text-[#6B7280]" /><span className="font-bold text-xs text-[#6B7280]">{t(locale, 'bmc.costStructure')}</span></div>
+   620→          <textarea value={bmc.costStructure} onChange={(e) => updateBlock('costStructure', e.target.value)} className="w-full h-20 text-xs border-0 outline-none resize-none bg-transparent" placeholder={t(locale, 'bmc.placeholder')} />
+   621→        </div>
+   622→        <div className="md:col-span-3 bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+   623→          <div className="flex items-center gap-2 mb-2"><TrendingUp className="w-4 h-4 text-[#27AE60]" /><span className="font-bold text-xs text-[#27AE60]">{t(locale, 'bmc.revenueStreams')}</span></div>
+   624→          <textarea value={bmc.revenueStreams} onChange={(e) => updateBlock('revenueStreams', e.target.value)} className="w-full h-20 text-xs border-0 outline-none resize-none bg-transparent" placeholder={t(locale, 'bmc.placeholder')} />
+   625→        </div>
+   626→      </div>
+   627→
+   628→      <div className="flex flex-wrap gap-3 items-center">
+   629→        <button onClick={handleSave} className="px-6 py-2.5 rounded-xl bg-[#1B3A6B] text-white font-bold text-sm flex items-center gap-2 hover:bg-[#2952A3]"><Check className="w-4 h-4" />{t(locale, 'bmc.save')}</button>
+   630→        <a href="https://bmc-1275.github.io/BMC-TOOL/" target="_blank" rel="noopener noreferrer" className="px-6 py-2.5 rounded-xl bg-[#C8A951] text-[#0D1B2A] font-bold text-sm flex items-center gap-2 hover:bg-[#E4C97A] shadow-md"><ExternalLink className="w-4 h-4" />{t(locale, 'bmc.toolLink')}</a>
+   631→      </div>
+   632→      <p className="text-xs text-slate-400 mt-3">{t(locale, 'bmc.toolDesc')}</p>
+   633→    </div>
+   634→  );
+   635→}
+   636→
+   637→// ==================== MESSAGING PANEL ====================
+   638→
+   639→function MessagingPanel({ locale, userId, userRole, otherPartyName }: { locale: Locale; userId: string; userRole: 'student' | 'admin'; otherPartyName: string }) {
+   640→  const { messages, addMessage, markMessagesRead } = useAppStore();
+   641→  const [newMsg, setNewMsg] = useState('');
+   642→  const dir = localeDirection[locale];
+   643→  const chatMessages = messages.filter((m: Message) => (m.from === userId || m.to === userId));
+   644→  const otherRole = userRole === 'student' ? 'admin' : 'student';
+   645→
+   646→  useEffect(() => { markMessagesRead(userId, otherRole); }, [userId, otherRole, markMessagesRead]);
+   647→
+   648→  const handleSend = () => {
+   649→    if (!newMsg.trim()) return;
+   650→    addMessage({ id: `msg-${Date.now()}`, from: userId, fromName: userId === 'admin-001' ? 'المدير العام' : 'الطالب', fromRole: userRole, to: userRole === 'admin' ? 'student-001' : 'admin-001', text: newMsg, timestamp: new Date().toISOString(), read: false });
+   651→    setNewMsg('');
+   652→  };
+   653→
+   654→  return (
+   655→    <div className="flex flex-col h-[500px]" style={{ direction: dir }}>
+   656→      <div className="p-3 border-b border-slate-200 flex items-center gap-2"><div className="w-8 h-8 rounded-full bg-[#1B3A6B] flex items-center justify-center"><Shield className="w-4 h-4 text-white" /></div><span className="font-bold text-[#1B3A6B] text-sm">{otherPartyName}</span></div>
+   657→      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+   658→        {chatMessages.length === 0 && <p className="text-center text-slate-400 text-sm py-8">{t(locale, 'common.noData')}</p>}
+   659→        {chatMessages.map((msg: Message) => (
+   660→          <div key={msg.id} className={`flex ${msg.from === userId ? 'justify-end' : 'justify-start'}`}>
+   661→            <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm ${msg.from === userId ? 'bg-[#1B3A6B] text-white rounded-br-sm' : 'bg-slate-100 text-slate-700 rounded-bl-sm'}`}>
+   662→              <p>{msg.text}</p>
+   663→              <p className={`text-[10px] mt-1 ${msg.from === userId ? 'text-white/50' : 'text-slate-400'}`}>{new Date(msg.timestamp).toLocaleTimeString(locale === 'ar' ? 'ar-DZ' : 'en', { hour: '2-digit', minute: '2-digit' })}</p>
+   664→            </div>
+   665→          </div>
+   666→        ))}
+   667→      </div>
+   668→      <div className="p-3 border-t border-slate-200 flex gap-2">
+   669→        <input type="text" value={newMsg} onChange={(e) => setNewMsg(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSend()} placeholder={t(locale, 'student.typeMessage')} className="flex-1 px-4 py-2.5 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm" />
+   670→        <button onClick={handleSend} className="px-4 py-2.5 rounded-xl bg-[#1B3A6B] text-white hover:bg-[#2952A3]"><Send className="w-4 h-4" /></button>
+   671→      </div>
+   672→    </div>
+   673→  );
+   674→}
+   675→
+   676→// ==================== STUDENT DASHBOARD ====================
+   677→
+   678→function StudentDashboard({ locale, user, onNavigate }: { locale: Locale; user: any; onNavigate: (v: AppView) => void }) {
+   679→  const { studentTab, setStudentTab, sidebarCollapsed, setSidebarCollapsed, editableStats } = useAppStore();
+   680→  const dir = localeDirection[locale];
+   681→
+   682→  const myProject = MOCK_PROJECTS.find(p => p.ownerEmail === user?.email) || MOCK_PROJECTS[0];
+   683→  const statusStepMap: Record<string, number> = { review: 0, committee: 1, accepted: 2, revision: 1, incubated: 4, rejected: -1 };
+   684→  const currentStep = statusStepMap[myProject.status] ?? 0;
+   685→
+   686→  const tabs = [
+   687→    { key: 'overview', label: t(locale, 'student.overview'), icon: HomeIcon },
+   688→    { key: 'my-project', label: t(locale, 'student.myProject'), icon: FileText },
+   689→    { key: 'bmc', label: t(locale, 'student.bmc'), icon: Target },
+   690→    { key: 'messages', label: t(locale, 'student.messages'), icon: MessageCircle, badge: MOCK_MESSAGES.filter(m => m.to === 'student-001' && !m.read).length },
+   691→    { key: 'guide', label: t(locale, 'student.guide'), icon: BookOpen },
+   692→    { key: 'profile', label: t(locale, 'student.profile'), icon: Users },
+   693→  ];
+   694→
+   695→  const stepIcons = [Lightbulb, ClipboardCheck, GraduationCap, Check, Rocket];
+   696→  const stepColors = ['#C8A951', '#1B3A6B', '#2E7D32', '#27AE60', '#C8A951'];
+   697→
+   698→  return (
+   699→    <div className="min-h-screen bg-[#F5F7FA] flex" style={{ direction: dir }}>
+   700→      <Sidebar items={tabs} activeTab={studentTab} onTabChange={setStudentTab} collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} locale={locale} />
+   701→      <div className="flex-1 flex flex-col min-w-0">
+   702→        {/* Header */}
+   703→        <div className="bg-gradient-to-r from-[#1B3A6B] to-[#2952A3] py-5 px-6">
+   704→          <div className="flex items-center gap-4">
+   705→            <div className="w-12 h-12 rounded-xl bg-[#C8A951] flex items-center justify-center text-[#0D1B2A] font-black text-lg" style={{ fontFamily: 'var(--font-cairo)' }}>{user?.name?.charAt(0) || 'S'}</div>
+   706→            <div><h1 className="text-xl font-black text-white" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'student.welcome')}، {user?.name}</h1><p className="text-[#E4C97A] text-xs">{user?.email}</p></div>
+   707→          </div>
+   708→        </div>
+   709→
+   710→        {/* Mobile tabs */}
+   711→        <div className="md:hidden flex gap-1 p-2 overflow-x-auto bg-white border-b border-slate-200">
+   712→          {tabs.map((tab) => (<button key={tab.key} onClick={() => setStudentTab(tab.key)} className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap ${studentTab === tab.key ? 'bg-[#1B3A6B] text-white' : 'text-slate-500'}`}><tab.icon className="w-3.5 h-3.5" />{tab.label}</button>))}
+   713→        </div>
+   714→
+   715→        {/* Content */}
+   716→        <div className="flex-1 p-4 sm:p-6 overflow-y-auto">
+   717→          {studentTab === 'overview' && (
+   718→            <div className="space-y-6">
+   719→              {/* Project Status Card */}
+   720→              <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100">
+   721→                <h3 className="text-lg font-bold text-[#1B3A6B] mb-4" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'student.projectStatus')}</h3>
+   722→                <div className="flex items-center gap-3 mb-6">
+   723→                  <StatusBadge status={myProject.status} locale={locale} />
+   724→                  <span className="text-sm text-slate-500">{myProject.refNumber}</span>
+   725→                  <span className="text-sm font-bold text-[#1B3A6B]">{locale === 'ar' ? myProject.projectName : myProject.projectNameEn}</span>
+   726→                </div>
+   727→                {/* Step Progress */}
+   728→                <div className="flex items-center gap-2 mb-6">
+   729→                  {[0, 1, 2, 3, 4].map((step) => {
+   730→                    const Icon = stepIcons[step];
+   731→                    const isActive = step === currentStep;
+   732→                    const isDone = step < currentStep;
+   733→                    const isRejected = myProject.status === 'rejected';
+   734→                    return (
+   735→                      <div key={step} className="flex-1 flex flex-col items-center">
+   736→                        <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-1 transition-all ${isDone ? 'bg-[#27AE60] text-white' : isActive && !isRejected ? 'bg-[#C8A951] text-[#0D1B2A] animate-pulse-gold' : 'bg-slate-200 text-slate-400'}`}>
+   737→                          {isDone ? <Check className="w-5 h-5" /> : <Icon className="w-4 h-4" />}
+   738→                        </div>
+   739→                        <span className="text-[10px] text-center text-slate-500 font-medium">{t(locale, `student.stepGuide.step${step}.title`)}</span>
+   740→                      </div>
+   741→                    );
+   742→                  })}
+   743→                </div>
+   744→                {/* Current Step Guide */}
+   745→                {currentStep >= 0 && (
+   746→                  <div className="p-4 rounded-xl" style={{ backgroundColor: `${stepColors[currentStep]}08`, border: `1px solid ${stepColors[currentStep]}20` }}>
+   747→                    <div className="flex items-start gap-3">
+   748→                      <Info className="w-5 h-5 shrink-0 mt-0.5" style={{ color: stepColors[currentStep] }} />
+   749→                      <div>
+   750→                        <h4 className="font-bold text-sm mb-1" style={{ color: stepColors[currentStep] }}>{t(locale, `student.stepGuide.step${currentStep}.title`)}</h4>
+   751→                        <p className="text-sm text-slate-600">{t(locale, `student.stepGuide.step${currentStep}.desc`)}</p>
+   752→                      </div>
+   753→                    </div>
+   754→                  </div>
+   755→                )}
+   756→              </div>
+   757→              {/* Quick Stats */}
+   758→              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+   759→                {[
+   760→                  { label: t(locale, 'stats.accepted'), value: editableStats.accepted, icon: Check, color: '#27AE60' },
+   761→                  { label: t(locale, 'stats.evaluating'), value: editableStats.evaluating, icon: ClipboardCheck, color: '#F39C12' },
+   762→                  { label: t(locale, 'stats.startups'), value: editableStats.startups, icon: Rocket, color: '#C8A951' },
+   763→                  { label: t(locale, 'stats.batches'), value: editableStats.trainedBatches, icon: GraduationCap, color: '#1B3A6B' },
+   764→                ].map((stat, i) => (
+   765→                  <div key={i} className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 text-center">
+   766→                    <stat.icon className="w-5 h-5 mx-auto mb-2" style={{ color: stat.color }} />
+   767→                    <div className="text-xl font-black" style={{ fontFamily: 'var(--font-cairo)', color: stat.color }}>{stat.value}</div>
+   768→                    <div className="text-xs text-slate-500">{stat.label}</div>
+   769→                  </div>
+   770→                ))}
+   771→              </div>
+   772→            </div>
+   773→          )}
+   774→
+   775→          {studentTab === 'my-project' && (
+   776→            <div className="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden">
+   777→              <div className="p-6" style={{ background: 'linear-gradient(135deg, #0D1B2A, #1B3A6B)' }}>
+   778→                <div className="flex items-center gap-2 mb-2"><FieldBadge field={myProject.field} locale={locale} /><StatusBadge status={myProject.status} locale={locale} /></div>
+   779→                <h2 className="text-2xl font-black text-white" style={{ fontFamily: 'var(--font-cairo)' }}>{locale === 'ar' ? myProject.projectName : myProject.projectNameEn}</h2>
+   780→                <p className="text-white/60 text-sm">{myProject.refNumber} • {myProject.tradeName}</p>
+   781→              </div>
+   782→              <div className="p-6 space-y-6">
+   783→                <div><h4 className="font-bold text-[#1B3A6B] mb-2">{t(locale, 'projectDetail.overview')}</h4><p className="text-slate-600">{myProject.description}</p></div>
+   784→                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+   785→                  <div className="space-y-2">{[['problem', t(locale, 'projectSubmit.problem')], ['targetAudience', t(locale, 'projectSubmit.targetAudience')], ['addedValue', t(locale, 'projectSubmit.addedValue')]].map(([key, label]) => (<div key={key}><span className="text-xs text-slate-400">{label}</span><p className="text-sm font-medium text-slate-700">{(myProject as any)[key]}</p></div>))}</div>
+   786→                  <div className="bg-[#F5F7FA] rounded-xl p-4 space-y-2">{[['fundingRequired', t(locale, 'projectSubmit.fundingRequired'), `${myProject.fundingRequired.toLocaleString()} د.ج`], ['stage', t(locale, 'projectSubmit.stage'), t(locale, `stages.${myProject.stage}`)], ['teamSize', t(locale, 'projectSubmit.teamSize'), String(myProject.teamSize)], ['score', t(locale, 'admin.score'), myProject.score ? `${myProject.score}/100` : t(locale, 'projectDetail.noScore')]].map(([key, label, value]) => (<div key={key as string} className="flex justify-between"><span className="text-xs text-slate-500">{label}</span><span className="text-xs font-bold text-[#1B3A6B]">{value}</span></div>))}</div>
+   787→                </div>
+   788→                {myProject.evaluationNotes && <div className="p-4 rounded-xl bg-[#C8A951]/5 border border-[#C8A951]/20"><p className="text-sm font-bold text-[#1B3A6B] mb-1">{t(locale, 'admin.notes')}</p><p className="text-sm text-slate-600">{myProject.evaluationNotes}</p></div>}
+   789→              </div>
+   790→            </div>
+   791→          )}
+   792→
+   793→          {studentTab === 'bmc' && <BMCTool locale={locale} projectId={myProject.id} />}
+   794→
+   795→          {studentTab === 'messages' && (
+   796→            <div className="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden">
+   797→              <div className="p-4 border-b border-slate-200"><h3 className="font-bold text-[#1B3A6B]" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'student.messages')}</h3></div>
+   798→              <MessagingPanel locale={locale} userId="student-001" userRole="student" otherPartyName={t(locale, 'student.adminTeam')} />
+   799→            </div>
+   800→          )}
+   801→
+   802→          {studentTab === 'guide' && (
+   803→            <div className="space-y-4">
+   804→              <h3 className="text-lg font-bold text-[#1B3A6B]" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'student.guide')}</h3>
+   805→              {[0, 1, 2, 3, 4].map((step) => {
+   806→                const Icon = stepIcons[step];
+   807→                const isDone = step < currentStep;
+   808→                const isActive = step === currentStep;
+   809→                return (
+   810→                  <div key={step} className={`bg-white rounded-2xl p-5 shadow-sm border transition-all ${isDone ? 'border-green-200 opacity-80' : isActive ? 'border-[#C8A951]/30 shadow-md' : 'border-slate-100'}`}>
+   811→                    <div className="flex items-start gap-4">
+   812→                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${isDone ? 'bg-[#27AE60] text-white' : isActive ? 'bg-[#C8A951] text-[#0D1B2A]' : 'bg-slate-100 text-slate-400'}`}>
+   813→                        {isDone ? <Check className="w-6 h-6" /> : <Icon className="w-5 h-5" />}
+   814→                      </div>
+   815→                      <div className="flex-1">
+   816→                        <div className="flex items-center gap-2 mb-1">
+   817→                          <h4 className="font-bold text-[#1B3A6B]" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, `student.stepGuide.step${step}.title`)}</h4>
+   818→                          {isActive && <span className="px-2 py-0.5 rounded-full bg-[#C8A951]/10 text-[#C8A951] text-[10px] font-bold">{locale === 'ar' ? 'الخطوة الحالية' : 'Current'}</span>}
+   819→                          {isDone && <span className="px-2 py-0.5 rounded-full bg-green-50 text-green-600 text-[10px] font-bold">✓</span>}
+   820→                        </div>
+   821→                        <p className="text-sm text-slate-600">{t(locale, `student.stepGuide.step${step}.desc`)}</p>
+   822→                      </div>
+   823→                    </div>
+   824→                  </div>
+   825→                );
+   826→              })}
+   827→            </div>
+   828→          )}
+   829→
+   830→          {studentTab === 'profile' && (
+   831→            <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100 max-w-lg">
+   832→              <h3 className="text-lg font-bold text-[#1B3A6B] mb-4" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'student.profile')}</h3>
+   833→              <div className="space-y-4">
+   834→                <div><label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'auth.name')}</label><input defaultValue={user?.name} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none" /></div>
+   835→                <div><label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'auth.email')}</label><input defaultValue={user?.email} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none" /></div>
+   836→                <button className="px-6 py-3 rounded-xl bg-[#1B3A6B] text-white font-bold hover:bg-[#2952A3] transition-all">{t(locale, 'common.save')}</button>
+   837→              </div>
+   838→            </div>
+   839→          )}
+   840→        </div>
+   841→      </div>
+   842→    </div>
+   843→  );
+   844→}
+   845→
+   846→// ==================== ADMIN DASHBOARD ====================
+   847→
+   848→function AdminDashboard({ locale }: { locale: Locale }) {
+   849→  const { adminTab, setAdminTab, sidebarCollapsed, setSidebarCollapsed, editableStats, setEditableStats, messages, setSelectedProjectId } = useAppStore();
+   850→  const [evalModal, setEvalModal] = useState<string | null>(null);
+   851→  const [evalScore, setEvalScore] = useState('');
+   852→  const [evalNotes, setEvalNotes] = useState('');
+   853→  const dir = localeDirection[locale];
+   854→
+   855→  const unreadAdmin = messages.filter((m: Message) => m.to === 'admin-001' && !m.read).length;
+   856→
+   857→  const tabs = [
+   858→    { key: 'overview', label: t(locale, 'admin.overview'), icon: BarChart3 },
+   859→    { key: 'projects', label: t(locale, 'admin.projects'), icon: FileText },
+   860→    { key: 'users', label: t(locale, 'admin.users'), icon: Users },
+   861→    { key: 'landing', label: t(locale, 'admin.landing'), icon: ImageIcon },
+   862→    { key: 'messages', label: t(locale, 'admin.messages'), icon: MessageCircle, badge: unreadAdmin },
+   863→    { key: 'events', label: t(locale, 'admin.events'), icon: Activity },
+   864→    { key: 'stats', label: t(locale, 'admin.editStats'), icon: Settings },
+   865→  ];
+   866→
+   867→  const handleProjectAction = (projectId: string, action: string) => {
+   868→    toast.success(`${action} — ${projectId}`);
+   869→    setEvalModal(null);
+   870→  };
+   871→
+   872→  const statCards = [
+   873→    { label: t(locale, 'admin.totalUsers'), value: 847, icon: Users, color: '#1B3A6B', change: '+12%' },
+   874→    { label: t(locale, 'admin.totalProjects'), value: editableStats.totalSubmitted, icon: FileText, color: '#C8A951', change: '+23%' },
+   875→    { label: t(locale, 'admin.pendingReview'), value: editableStats.evaluating, icon: ClipboardCheck, color: '#F39C12', change: '+8%' },
+   876→    { label: t(locale, 'admin.acceptedProjects'), value: editableStats.accepted, icon: Check, color: '#27AE60', change: '+15%' },
+   877→  ];
+   878→
+   879→  return (
+   880→    <div className="min-h-screen bg-[#F5F7FA] flex" style={{ direction: dir }}>
+   881→      <Sidebar items={tabs} activeTab={adminTab} onTabChange={setAdminTab} collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} locale={locale} />
+   882→      <div className="flex-1 flex flex-col min-w-0">
+   883→        <div className="bg-gradient-to-r from-[#0D1B2A] to-[#1B3A6B] py-5 px-6">
+   884→          <div className="flex items-center gap-4"><div className="w-12 h-12 rounded-xl bg-[#C8A951] flex items-center justify-center"><Shield className="w-6 h-6 text-[#0D1B2A]" /></div><div><h1 className="text-xl font-black text-white" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'admin.title')}</h1><p className="text-[#E4C97A] text-xs">INC ALG 3</p></div></div>
+   885→        </div>
+   886→
+   887→        {/* Mobile tabs */}
+   888→        <div className="md:hidden flex gap-1 p-2 overflow-x-auto bg-white border-b border-slate-200">{tabs.map((tab) => (<button key={tab.key} onClick={() => setAdminTab(tab.key)} className={`flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap ${adminTab === tab.key ? 'bg-[#0D1B2A] text-white' : 'text-slate-500'}`}><tab.icon className="w-3.5 h-3.5" />{tab.label}</button>))}</div>
+   889→
+   890→        <div className="flex-1 p-4 sm:p-6 overflow-y-auto">
+   891→          {/* Overview */}
+   892→          {adminTab === 'overview' && (
+   893→            <div className="space-y-6">
+   894→              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+   895→                {statCards.map((card, i) => (<motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} className="bg-white rounded-2xl p-5 shadow-md border border-slate-100">
+   896→                  <div className="flex items-center justify-between mb-3"><div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${card.color}12` }}><card.icon className="w-6 h-6" style={{ color: card.color }} /></div><span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-lg">{card.change}</span></div>
+   897→                  <div className="text-2xl font-black" style={{ fontFamily: 'var(--font-cairo)', color: card.color }}>{card.value.toLocaleString()}</div>
+   898→                  <div className="text-sm text-slate-500">{card.label}</div>
+   899→                </motion.div>))}
+   900→              </div>
+   901→              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+   902→                <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100">
+   903→                  <h3 className="font-bold text-[#1B3A6B] mb-4" style={{ fontFamily: 'var(--font-cairo)' }}>{locale === 'ar' ? 'المشاريع حسب الحالة' : 'Projects by Status'}</h3>
+   904→                  <div className="space-y-3">{[
+   905→                    { label: t(locale, 'status.review'), value: editableStats.evaluating, total: editableStats.totalSubmitted, color: '#F39C12' },
+   906→                    { label: t(locale, 'status.accepted'), value: editableStats.accepted, total: editableStats.totalSubmitted, color: '#27AE60' },
+   907→                    { label: t(locale, 'status.incubated'), value: editableStats.startups, total: editableStats.totalSubmitted, color: '#2E7D32' },
+   908→                    { label: t(locale, 'status.rejected'), value: 89, total: editableStats.totalSubmitted, color: '#C0392B' },
+   909→                  ].map((item, i) => (<div key={i}><div className="flex justify-between text-sm mb-1"><span className="text-slate-600">{item.label}</span><span className="font-bold" style={{ color: item.color }}>{item.value}</span></div><div className="h-3 bg-slate-100 rounded-full overflow-hidden"><motion.div initial={{ width: 0 }} animate={{ width: `${(item.value / item.total) * 100}%` }} transition={{ delay: i * 0.1, duration: 0.8 }} className="h-full rounded-full" style={{ backgroundColor: item.color }} /></div></div>))}</div>
+   910→                </div>
+   911→                <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100">
+   912→                  <h3 className="font-bold text-[#1B3A6B] mb-4" style={{ fontFamily: 'var(--font-cairo)' }}>{locale === 'ar' ? 'المشاريع حسب المجال' : 'Projects by Field'}</h3>
+   913→                  <div className="grid grid-cols-2 gap-3">{[['ict', 420, '#1B3A6B'], ['digital', 380, '#2952A3'], ['energy', 290, '#F39C12'], ['ecommerce', 310, '#C8A951'], ['minerals', 180, '#2E7D32'], ['industry', 220, '#E67E22']].map(([field, count, color], i) => (<div key={i} className="bg-slate-50 rounded-xl p-3 text-center"><div className="text-xl font-black" style={{ fontFamily: 'var(--font-cairo)', color }}>{count}</div><div className="text-xs text-slate-500">{t(locale, `fields.${field}`)}</div></div>))}</div>
+   914→                </div>
+   915→              </div>
+   916→            </div>
+   917→          )}
+   918→
+   919→          {/* Projects */}
+   920→          {adminTab === 'projects' && (
+   921→            <div className="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden">
+   922→              <div className="overflow-x-auto">
+   923→                <table className="w-full">
+   924→                  <thead className="bg-[#F5F7FA]"><tr><th className="px-4 py-3 text-start text-xs font-bold text-slate-500">#</th><th className="px-4 py-3 text-start text-xs font-bold text-slate-500">{t(locale, 'projectSubmit.projectName')}</th><th className="px-4 py-3 text-start text-xs font-bold text-slate-500">{t(locale, 'projectSubmit.ownerName')}</th><th className="px-4 py-3 text-start text-xs font-bold text-slate-500">{t(locale, 'projectSubmit.field')}</th><th className="px-4 py-3 text-start text-xs font-bold text-slate-500">{t(locale, 'common.status')}</th><th className="px-4 py-3 text-start text-xs font-bold text-slate-500">{t(locale, 'admin.score')}</th><th className="px-4 py-3 text-start text-xs font-bold text-slate-500">{t(locale, 'common.actions')}</th></tr></thead>
+   925→                  <tbody className="divide-y divide-slate-100">{MOCK_PROJECTS.map((project) => (<tr key={project.id} className="hover:bg-slate-50 transition-colors cursor-pointer" onClick={() => { setSelectedProjectId(project.id); }}>
+   926→                    <td className="px-4 py-3 text-sm font-mono text-slate-400">{project.refNumber}</td>
+   927→                    <td className="px-4 py-3 text-sm font-bold text-[#1B3A6B]">{locale === 'ar' ? project.projectName : project.projectNameEn}</td>
+   928→                    <td className="px-4 py-3 text-sm text-slate-600">{project.ownerName}</td>
+   929→                    <td className="px-4 py-3"><FieldBadge field={project.field} locale={locale} /></td>
+   930→                    <td className="px-4 py-3"><StatusBadge status={project.status} locale={locale} /></td>
+   931→                    <td className="px-4 py-3 text-sm font-bold" style={{ color: project.score ? (project.score >= 80 ? '#27AE60' : '#F39C12') : '#9CA3AF' }}>{project.score || '—'}</td>
+   932→                    <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+   933→                      <div className="flex gap-1">
+   934→                        <button onClick={() => setEvalModal(project.id)} className="p-1.5 rounded-lg bg-[#1B3A6B]/5 hover:bg-[#1B3A6B]/10 text-[#1B3A6B]" title={t(locale, 'admin.evaluate')}><Edit className="w-3.5 h-3.5" /></button>
+   935→                        {project.status === 'review' && (<><button onClick={() => handleProjectAction(project.id, 'accept')} className="p-1.5 rounded-lg bg-green-50 hover:bg-green-100 text-green-600"><Check className="w-3.5 h-3.5" /></button><button onClick={() => handleProjectAction(project.id, 'reject')} className="p-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-600"><X className="w-3.5 h-3.5" /></button></>)}
+   936→                        {project.status === 'accepted' && <button onClick={() => handleProjectAction(project.id, 'incubate')} className="p-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-600"><Rocket className="w-3.5 h-3.5" /></button>}
+   937→                      </div>
+   938→                    </td>
+   939→                  </tr>))}</tbody>
+   940→                </table>
+   941→              </div>
+   942→            </div>
+   943→          )}
+   944→
+   945→          {/* Users */}
+   946→          {adminTab === 'users' && (<div className="space-y-4"><h3 className="text-lg font-bold text-[#1B3A6B]" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'admin.users')}</h3>{[{ name: 'أحمد بن علي', email: 'ahmed.benali@univ-alger3.dz', role: 'student', faculty: 'eco', projects: 2 }, { name: 'فاطمة الزهراء مراد', email: 'fatima.mourad@univ-alger3.dz', role: 'student', faculty: 'eco', projects: 1 }, { name: 'سارة حداد', email: 'sara.haddad@univ-alger3.dz', role: 'student', faculty: 'info', projects: 1 }, { name: 'د. علي بوعشة محمد', email: 'a.bouacha@univ-alger3.dz', role: 'admin', faculty: '', projects: 0 }].map((user, i) => (<div key={i} className="bg-white rounded-2xl p-5 shadow-md border border-slate-100 flex items-center gap-4"><div className="w-12 h-12 rounded-xl flex items-center justify-center font-bold text-white" style={{ backgroundColor: user.role === 'admin' ? '#C8A951' : '#1B3A6B', fontFamily: 'var(--font-cairo)' }}>{user.name.charAt(0)}</div><div className="flex-1"><h4 className="font-bold text-[#1B3A6B]" style={{ fontFamily: 'var(--font-cairo)' }}>{user.name}</h4><p className="text-sm text-slate-500">{user.email}</p></div><span className={`px-3 py-1 rounded-full text-xs font-bold ${user.role === 'admin' ? 'bg-[#C8A951]/10 text-[#C8A951]' : 'bg-[#1B3A6B]/10 text-[#1B3A6B]'}`}>{user.role === 'admin' ? t(locale, 'nav.admin') : t(locale, 'auth.registerBtn')}</span></div>))}</div>)}
+   947→
+   948→          {/* Landing Page Management */}
+   949→          {adminTab === 'landing' && (<div className="space-y-6"><h3 className="text-lg font-bold text-[#1B3A6B]" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'admin.landingPage')}</h3>{[{ section: locale === 'ar' ? 'القسم الرئيسي (Hero)' : 'Hero Section', icon: Sparkles }, { section: locale === 'ar' ? 'الإحصائيات' : 'Statistics', icon: BarChart3 }, { section: locale === 'ar' ? 'كيف تعمل الحاضنة' : 'How It Works', icon: Lightbulb }, { section: locale === 'ar' ? 'الخدمات' : 'Services', icon: Zap }, { section: locale === 'ar' ? 'عن الحاضنة' : 'About', icon: Building2 }, { section: locale === 'ar' ? 'الأحداث' : 'Events', icon: Activity }].map((item, i) => (<div key={i} className="bg-white rounded-2xl p-5 shadow-md border border-slate-100"><div className="flex items-center justify-between mb-4"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-xl bg-[#1B3A6B]/5 flex items-center justify-center"><item.icon className="w-5 h-5 text-[#1B3A6B]" /></div><h4 className="font-bold text-[#1B3A6B]" style={{ fontFamily: 'var(--font-cairo)' }}>{item.section}</h4></div><div className="flex gap-2"><button className="p-2 rounded-lg bg-[#1B3A6B]/5 hover:bg-[#1B3A6B]/10 text-[#1B3A6B]"><Edit className="w-4 h-4" /></button><button className="p-2 rounded-lg bg-[#1B3A6B]/5 hover:bg-[#1B3A6B]/10 text-[#1B3A6B]"><ImageIcon className="w-4 h-4" /></button><button className="p-2 rounded-lg bg-[#1B3A6B]/5 hover:bg-[#1B3A6B]/10 text-[#1B3A6B]"><Video className="w-4 h-4" /></button></div></div><div className="space-y-3"><div><label className="block text-xs font-bold text-slate-500 mb-1">{t(locale, 'admin.sectionTitle')} (AR)</label><input className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" defaultValue={item.section} /></div><div className="grid grid-cols-2 gap-3"><div><label className="block text-xs font-bold text-slate-500 mb-1">{t(locale, 'admin.sectionTitle')} (EN)</label><input className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" /></div><div><label className="block text-xs font-bold text-slate-500 mb-1">{t(locale, 'admin.sectionTitle')} (FR)</label><input className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" /></div></div></div></div>))}<button className="px-6 py-3 rounded-xl bg-[#1B3A6B] text-white font-bold hover:bg-[#2952A3] flex items-center gap-2"><Check className="w-4 h-4" />{t(locale, 'common.save')}</button></div>)}
+   950→
+   951→          {/* Messages */}
+   952→          {adminTab === 'messages' && (<div className="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden"><div className="p-4 border-b border-slate-200"><h3 className="font-bold text-[#1B3A6B]" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'admin.messages')}</h3></div><MessagingPanel locale={locale} userId="admin-001" userRole="admin" otherPartyName={locale === 'ar' ? 'أحمد بن علي (طالب)' : 'Ahmed Ben Ali (Student)'} /></div>)}
+   953→
+   954→          {/* Events */}
+   955→          {adminTab === 'events' && (<div className="space-y-4"><div className="flex items-center justify-between"><h3 className="text-lg font-bold text-[#1B3A6B]" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'admin.events')}</h3><button className="px-4 py-2 rounded-xl bg-[#1B3A6B] text-white text-sm font-bold flex items-center gap-2"><Plus className="w-4 h-4" />{locale === 'ar' ? 'إضافة حدث' : 'Add Event'}</button></div>{MOCK_EVENTS.map((event) => (<div key={event.id} className="bg-white rounded-2xl p-5 shadow-md border border-slate-100"><div className="flex items-start justify-between"><div><h4 className="font-bold text-[#1B3A6B] mb-1" style={{ fontFamily: 'var(--font-cairo)' }}>{locale === 'ar' ? event.titleAr : event.titleEn}</h4><p className="text-sm text-slate-500">{event.location} • {new Date(event.date).toLocaleDateString()}</p></div><div className="flex gap-1"><button className="p-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-500"><Edit className="w-3.5 h-3.5" /></button><button className="p-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-500"><Trash2 className="w-3.5 h-3.5" /></button></div></div></div>))}</div>)}
+   956→
+   957→          {/* Edit Stats */}
+   958→          {adminTab === 'stats' && (
+   959→            <div className="space-y-6">
+   960→              <div><h3 className="text-lg font-bold text-[#1B3A6B] mb-1" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'admin.editStats')}</h3><p className="text-sm text-slate-500">{t(locale, 'admin.statsDesc')}</p></div>
+   961→              <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100">
+   962→                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   963→                  {[
+   964→                    { key: 'totalSubmitted', label: t(locale, 'stats.projectsRegistered') },
+   965→                    { key: 'accepted', label: t(locale, 'stats.accepted') },
+   966→                    { key: 'evaluating', label: t(locale, 'stats.evaluating') },
+   967→                    { key: 'startups', label: t(locale, 'stats.startups') },
+   968→                    { key: 'trainedBatches', label: t(locale, 'stats.batches') },
+   969→                    { key: 'incubatedProjects', label: t(locale, 'stats.incubated') },
+   970→                    { key: 'successRate', label: t(locale, 'stats.successRate') },
+   971→                  ].map((item) => (
+   972→                    <div key={item.key}>
+   973→                      <label className="block text-sm font-bold text-slate-700 mb-1">{item.label}</label>
+   974→                      <input type="number" value={(editableStats as any)[item.key]} onChange={(e) => setEditableStats({ ...editableStats, [item.key]: Number(e.target.value) })} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm" />
+   975→                    </div>
+   976→                  ))}
+   977→                </div>
+   978→                <button onClick={() => toast.success(locale === 'ar' ? 'تم حفظ الإحصائيات' : 'Stats saved')} className="mt-6 px-6 py-3 rounded-xl bg-[#1B3A6B] text-white font-bold hover:bg-[#2952A3] flex items-center gap-2"><Check className="w-4 h-4" />{t(locale, 'common.save')}</button>
+   979→              </div>
+   980→            </div>
+   981→          )}
+   982→        </div>
+   983→      </div>
+   984→
+   985→      {/* Evaluate Modal */}
+   986→      <AnimatePresence>
+   987→        {evalModal && (
+   988→          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setEvalModal(null)}>
+   989→            <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }} className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl" onClick={(e) => e.stopPropagation()}>
+   990→              <h3 className="text-lg font-bold text-[#1B3A6B] mb-4" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'admin.evaluate')}</h3>
+   991→              <div className="space-y-4">
+   992→                <div><label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'admin.score')} (0-100)</label><input type="number" min={0} max={100} value={evalScore} onChange={(e) => setEvalScore(e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none" /></div>
+   993→                <div><label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'admin.notes')}</label><textarea value={evalNotes} onChange={(e) => setEvalNotes(e.target.value)} rows={3} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none resize-none" /></div>
+   994→                <div className="grid grid-cols-2 gap-3">
+   995→                  {[['accept', 'bg-green-600 hover:bg-green-700', Check], ['revision', 'bg-amber-600 hover:bg-amber-700', RefreshCw], ['incubate', 'bg-emerald-600 hover:bg-emerald-700', Rocket], ['reject', 'bg-red-600 hover:bg-red-700', X]].map(([action, color, Icon]) => (
+   996→                    <button key={action} onClick={() => handleProjectAction(evalModal!, action)} className={`px-4 py-2.5 rounded-xl text-white font-bold text-sm flex items-center justify-center gap-2 transition-all ${color}`}>
+   997→                      {React.createElement(Icon as any, { className: 'w-4 h-4' })}{t(locale, `admin.${action}`)}
+   998→                    </button>
+   999→                  ))}
+  1000→                </div>
+  1001→                <button onClick={() => setEvalModal(null)} className="w-full py-2.5 rounded-xl border-2 border-slate-200 text-slate-600 font-bold mt-2">{t(locale, 'common.cancel')}</button>
+  1002→              </div>
+  1003→            </motion.div>
+  1004→          </motion.div>
+  1005→        )}
+  1006→      </AnimatePresence>
+  1007→    </div>
+  1008→  );
+  1009→}
+  1010→
+  1011→// ==================== ABOUT PAGE ====================
+  1012→
+  1013→function AboutPage({ locale }: { locale: Locale }) {
+  1014→  const dir = localeDirection[locale];
+  1015→  return (
+  1016→    <div className="min-h-screen bg-[#F5F7FA] py-12" style={{ direction: dir }}>
+  1017→      <div className="max-w-4xl mx-auto px-4 sm:px-6">
+  1018→        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-3xl shadow-xl overflow-hidden">
+  1019→          <div className="p-8 sm:p-12" style={{ background: 'linear-gradient(135deg, #0D1B2A, #1B3A6B)' }}><div className="text-center"><div className="w-20 h-20 rounded-2xl mx-auto mb-4 bg-[#C8A951] flex items-center justify-center"><Building2 className="w-10 h-10 text-[#0D1B2A]" /></div><h1 className="text-3xl font-black text-white mb-2" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'about.title')}</h1><p className="text-[#E4C97A] text-lg">{t(locale, 'about.subtitle')}</p></div></div>
+  1020→          <div className="p-8 sm:p-12 space-y-6"><p className="text-slate-600 leading-relaxed text-lg">{t(locale, 'about.p1')}</p><p className="text-slate-600 leading-relaxed text-lg">{t(locale, 'about.p2')}</p><p className="text-slate-600 leading-relaxed text-lg">{t(locale, 'about.p3')}</p><div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-6 border-t border-slate-100">{[{ icon: Users, text: t(locale, 'about.director'), color: '#1B3A6B' }, { icon: Building2, text: t(locale, 'about.established'), color: '#C8A951' }, { icon: Award, text: t(locale, 'about.official'), color: '#2E7D32' }].map((item, i) => (<div key={i} className="flex items-center gap-3 p-4 rounded-xl bg-slate-50"><div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${item.color}15` }}><item.icon className="w-5 h-5" style={{ color: item.color }} /></div><span className="font-medium text-slate-700 text-sm">{item.text}</span></div>))}</div></div>
+  1021→        </motion.div>
+  1022→      </div>
+  1023→    </div>
+  1024→  );
+  1025→}
+  1026→
+  1027→// ==================== MAIN PAGE ====================
+  1028→
+  1029→export default function HomePage() {
+  1030→  const { currentView, setCurrentView, user, setUser, locale } = useAppStore();
+  1031→  const dir = localeDirection[locale];
+  1032→
+  1033→  useEffect(() => { document.documentElement.dir = dir; document.documentElement.lang = locale; }, [locale, dir]);
+  1034→
+  1035→  const handleLogout = () => { setUser(null); setCurrentView('landing'); toast.success(locale === 'ar' ? 'تم تسجيل الخروج' : 'Logged out'); };
+  1036→
+  1037→  const renderView = () => {
+  1038→    switch (currentView) {
+  1039→      case 'landing': return <LandingPage locale={locale} onNavigate={setCurrentView} />;
+  1040→      case 'login': case 'register': return <AuthPage locale={locale} onNavigate={setCurrentView} onLogin={setUser} />;
+  1041→      case 'projects': return <ProjectsPage locale={locale} onNavigate={setCurrentView} />;
+  1042→      case 'submit-project': return user ? <ProjectSubmitPage locale={locale} onNavigate={setCurrentView} user={user} /> : <AuthPage locale={locale} onNavigate={setCurrentView} onLogin={setUser} />;
+  1043→      case 'student-dashboard': return user ? <StudentDashboard locale={locale} user={user} onNavigate={setCurrentView} /> : <AuthPage locale={locale} onNavigate={setCurrentView} onLogin={setUser} />;
+  1044→      case 'admin-dashboard': return user?.role === 'admin' ? <AdminDashboard locale={locale} /> : <AuthPage locale={locale} onNavigate={setCurrentView} onLogin={setUser} />;
+  1045→      case 'project-detail': return <ProjectDetail locale={locale} onNavigate={setCurrentView} />;
+  1046→      case 'about': return <AboutPage locale={locale} />;
+  1047→      default: return <LandingPage locale={locale} onNavigate={setCurrentView} />;
+  1048→    }
+  1049→  };
+  1050→
+  1051→  return (
+  1052→    <div className="min-h-screen flex flex-col" style={{ direction: dir }}>
+  1053→      <Header locale={locale} currentView={currentView} onNavigate={setCurrentView} user={user} onLogout={handleLogout} />
+  1054→      <main className="flex-1">
+  1055→        <AnimatePresence mode="wait"><motion.div key={currentView} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>{renderView()}</motion.div></AnimatePresence>
+  1056→      </main>
+  1057→    </div>
+  1058→  );
+  1059→}
+  1060→
