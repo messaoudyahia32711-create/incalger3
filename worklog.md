@@ -102,3 +102,38 @@ Stage Summary:
 - All visual elements updated to carry INC ALG 3 identity (colors, fonts, branding)
 - Calculation algorithms 100% preserved — no changes to any financial computations
 - Build passes successfully
+---
+Task ID: bmc-rebrand-embed
+Agent: Main Agent
+Task: Restructure BMC/Project Study tool - remove header/brand/banners, keep sidebar, add English, integrate with platform
+
+Work Log:
+- Removed `<header>` element from BMC tool HTML (with kicker, title, subtitle, badges)
+- Removed gold divider line after header
+- Removed brand-strip section (logo + brand copy)
+- Removed privacy-banner, assist-banner, rights-line divs
+- Added embedded mode CSS (body.embedded) for seamless iframe integration
+- Added English option to language select dropdown
+- Added English language support to I18N object (step tabs, headings, labels)
+- Added English language support to OUT object (appendices, KPIs, headers, BMC labels)
+- Updated FORM_LABELS to include English as 3rd element in each entry
+- Updated OPTION_MAPS to include English labels
+- Added ASSET_LABELS_EN for English asset name translations
+- Updated legalLabel(), typeLabel(), regimeLabel() functions for English
+- Updated translateLabels(), setSelectOptions(), translateOptions() for English
+- Updated translateButtonsSmall(), translateCustomV13() for English
+- Updated resetData() with English confirmation message
+- Added initApp() with URL param support (?embed=1, ?lang=en/fr/ar)
+- Added postMessage listener for parent platform language sync
+- Created BMCToolEmbed React component in page.tsx
+- BMCToolEmbed passes locale to iframe via URL params and postMessage
+- BMCToolEmbed has compact integrated toolbar with INC ALG 3 branding
+- Removed external "Open in new tab" button from student dashboard
+- Build compiles successfully
+
+Stage Summary:
+- BMC tool is now fully integrated into the platform (no header/banners when embedded)
+- Language changes in the platform sync to the BMC tool via postMessage
+- English language support added throughout the BMC tool
+- All calculation algorithms preserved exactly as they were
+- Font remains TAJAWAL as requested

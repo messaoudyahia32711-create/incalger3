@@ -673,6 +673,68 @@ function MessagingPanel({ locale, userId, userRole, otherPartyName }: { locale: 
   );
 }
 
+// ==================== BMC TOOL EMBED ====================
+
+function BMCToolEmbed({ locale }: { locale: Locale }) {
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const dir = localeDirection[locale];
+
+  // Map platform locale to BMC tool locale
+  const bmcLang = locale === 'fr' ? 'fr' : locale === 'en' ? 'en' : 'ar';
+
+  // Send language change to iframe via postMessage
+  useEffect(() => {
+    const iframe = iframeRef.current;
+    if (iframe?.contentWindow) {
+      iframe.contentWindow.postMessage({ type: 'setLanguage', lang: bmcLang }, '*');
+    }
+  }, [bmcLang]);
+
+  const iframeSrc = `/bmc-tool/index.html?embed=1&lang=${bmcLang}`;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: 'easeOut' }}
+      className="h-full flex flex-col"
+      style={{ direction: dir }}
+    >
+      {/* Compact integrated toolbar */}
+      <div className="flex flex-wrap items-center gap-3 mb-3">
+        <div className="flex items-center gap-2.5">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #1B3A6B, #2952A3)' }}>
+            <Target className="w-5 h-5 text-[#E4C97A]" />
+          </div>
+          <div>
+            <h2 className="text-lg font-black text-[#1B3A6B]" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'student.bmc')}</h2>
+            <p className="text-[#C8A951] text-[11px] font-bold">
+              {locale === 'ar' ? 'أداة دراسة المشروع المالي — القرار 1275' : locale === 'fr' ? 'Outil d\'étude financière — Décision 1275' : 'Financial Study Tool — Decision 1275'}
+            </p>
+          </div>
+        </div>
+        <div className="flex-1" />
+        <span className="px-3 py-1.5 rounded-full text-xs font-bold bg-[#1B3A6B]/5 text-[#1B3A6B] border border-[#1B3A6B]/10">INC ALG 3</span>
+        <span className="px-3 py-1.5 rounded-full text-xs font-bold bg-[#2E7D32]/5 text-[#2E7D32] border border-[#2E7D32]/10">
+          {locale === 'ar' ? 'حاضنة جامعة الجزائر 3' : locale === 'fr' ? 'Incubateur Univ. Alger 3' : 'Univ. Algiers 3 Incubator'}
+        </span>
+      </div>
+
+      {/* Embedded BMC Tool */}
+      <div className="flex-1 bg-white rounded-2xl shadow-md border border-slate-200 overflow-hidden" style={{ borderTop: '3px solid #C8A951' }}>
+        <iframe
+          ref={iframeRef}
+          src={iframeSrc}
+          className="w-full border-0"
+          style={{ height: 'calc(100vh - 180px)', minHeight: '750px' }}
+          title="INC ALG 3 — Financial Study Tool"
+          sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+        />
+      </div>
+    </motion.div>
+  );
+}
+
 // ==================== STUDENT DASHBOARD ====================
 
 function StudentDashboard({ locale, user, onNavigate }: { locale: Locale; user: any; onNavigate: (v: AppView) => void }) {

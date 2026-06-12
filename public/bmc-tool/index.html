@@ -261,44 +261,32 @@ body.pdf-mode{font-family:Tahoma,Arial,sans-serif!important;color:#0f172a!import
 @media print{body{background:#fff!important;color:#0f172a!important}.executive-brief{box-shadow:none!important}.bmc{page-break-before:auto!important;break-before:auto!important}.bmc-section{page-break-before:always!important;break-before:page!important}.bmc-box div{font-size:7px!important;line-height:1.18!important}@page{size:A4;margin:10mm}}
 @media(max-width:950px){.exec-grid{grid-template-columns:1fr}}
 
+/* === EMBEDDED MODE — when loaded as iframe inside platform === */
+body.embedded{background:transparent!important;margin:0!important;padding:0!important}
+body.embedded .app{width:100%!important;margin:0!important}
+body.embedded .toolbar{display:none!important}
+body.embedded .layout{gap:14px!important}
+body.embedded .steps{border-radius:16px!important;padding:12px!important;border-top:3px solid #C8A951!important;box-shadow:0 4px 16px rgba(13,27,42,.06)!important}
+body.embedded .step-tab{padding:10px!important;border-radius:12px!important;font-size:13px!important}
+body.embedded .panel{border-radius:16px!important;padding:20px!important;border-top:3px solid #C8A951!important;box-shadow:0 4px 16px rgba(13,27,42,.06)!important}
+body.embedded input,body.embedded select,body.embedded textarea{border-radius:12px!important;padding:10px 12px!important;font-size:14px!important}
+body.embedded .btn{border-radius:12px!important;padding:10px 14px!important}
+body.embedded .item{border-radius:16px!important;padding:14px!important}
+body.embedded .alert{border-radius:14px!important;padding:10px 14px!important}
+body.embedded .auto-plan-box{border-radius:16px!important;padding:14px!important}
+body.embedded .funding-mini{border-radius:12px!important;padding:10px!important}
   </style>
 </head>
 <body>
-<header>
-  <div style="position:absolute;inset:0;opacity:.05;background-image:radial-gradient(circle at 2px 2px,#C8A951 1px,transparent 0);background-size:40px 40px;pointer-events:none"></div>
-  <div class="header-kicker" id="mainKicker">INC ALG 3 — القرار الوزاري 1275 المعدل والمتمم</div>
-  <h1 id="mainTitle">أداة دراسة المشروع المالي</h1>
-  <p id="mainSubtitle">حاضنة أعمال جامعة الجزائر 3 — إبراهيم سلطان شيبوط</p>
-  <div style="margin-top:12px;display:flex;justify-content:center;gap:8px">
-    <span style="display:inline-block;padding:4px 14px;border-radius:999px;background:rgba(200,169,81,.15);color:#E4C97A;font-weight:900;font-size:12px">INC ALG 3</span>
-    <span style="display:inline-block;padding:4px 14px;border-radius:999px;background:rgba(46,125,50,.15);color:#86efac;font-weight:900;font-size:12px">Université d'Alger 3</span>
-  </div>
-</header>
-<div style="height:3px;background:linear-gradient(90deg,transparent,#C8A951,#E4C97A,#C8A951,transparent)"></div>
+<!-- Header removed — integrated into platform -->
+
 <main class="app">
-  <div class="brand-strip no-print">
-    <div class="brand-mark">
-      <img src="incubator-logo.jpeg" alt="شعار حاضنة الأعمال" onerror="this.style.display='none'; document.getElementById('logoFallback').style.display='flex';">
-      <div id="logoFallback" class="brand-fallback" style="display:none;background:linear-gradient(135deg,#0D1B2A,#1B3A6B);color:#E4C97A;border:2px solid #C8A951;font-size:18px;font-family:'Cairo','Tajawal',sans-serif;border-radius:20px;">
-        <div style="text-align:center;line-height:1.5">
-          <div style="font-size:32px;font-weight:900;letter-spacing:2px">INC ALG 3</div>
-          <div style="font-size:11px;color:#E4C97A;margin-top:4px;font-weight:700">حاضنة أعمال جامعة الجزائر 3</div>
-        </div>
-      </div>
-    </div>
-    <div class="brand-copy">
-      <h2 id="brandName">INC ALG 3 — حاضنة أعمال جامعة الجزائر 3</h2>
-      <h3 id="brandToolName">أداة دراسة المشروع المالي ونموذج الأعمال BMC</h3>
-      <p id="brandDecision">القرار الوزاري 1275 المعدل والمتمم</p>
-      <p id="brandSlogan">من ثروة الأرض النادرة إلى ثروة الأفكار — حاضنة أعمال جامعة الجزائر 3</p>
-    </div>
-  </div>
-  <div class="privacy-banner no-print" id="privacyBanner">الأداة تعمل محلياً داخل المتصفح ولا تحفظ الأرقام أو بيانات المشروع أو ترسلها لأي جهة — INC ALG 3</div>
-  <div class="assist-banner no-print" id="assistBanner">نعلم جميع الطلبة أن الأداة الرقمية الخاصة بالخطة المالية ونموذج الأعمال BMC هي أداة مساعدة فقط، وُضعت لتسهيل العمل الأولي وتسريع إعداد المشروع، وتعتمد نتائجها على دقة وصحة المعلومات المدخلة.</div>
-  <div class="rights-line no-print" id="rightsLine">جميع الحقوق محفوظة © INC ALG 3 — حاضنة أعمال جامعة الجزائر 3</div>
-  <div class="toolbar no-print">
+  <!-- Brand strip removed — integrated into platform -->
+  <!-- Banners removed — integrated into platform -->
+  <div class="toolbar no-print" id="toolbarRow">
     <select id="languageSelect" class="lang-select" onchange="setLanguage(this.value)">
       <option value="ar">العربية</option>
+      <option value="en">English</option>
       <option value="fr">Français</option>
     </select>
     <button class="btn" id="generateBtn" onclick="generateReportSafe()">📎 توليد الملاحق</button>
@@ -1105,7 +1093,28 @@ function downloadPDF(){
     html2pdf().set(opt).from(element).save().then(()=>{document.body.classList.remove('pdf-mode')}).catch(()=>{window.print();setTimeout(()=>document.body.classList.remove('pdf-mode'),500)});
   },250);
 }
-function resetData(){const msg=currentLang==='fr'?'Voulez-vous réinitialiser toutes les données actuelles ?':'هل تريد إفراغ كل البيانات الحالية؟';if(confirm(msg))location.reload()}function initApp(){initTabs();initAssetSelector();initCustomAsset();addProduct();const savedLang=localStorage.getItem('financial_tool_lang')||'ar';const sel=document.getElementById('languageSelect');if(sel)sel.value=savedLang;currentLang=savedLang;document.addEventListener('input',()=>calculateAll());document.addEventListener('change',e=>{if(e.target&&e.target.name==='projectType')suggestAssetsByProjectType();calculateAll()});applyLanguage()}initApp();
+function resetData(){const msg=currentLang==='en'?'Do you want to reset all current data?':currentLang==='fr'?'Voulez-vous réinitialiser toutes les données actuelles ?':'هل تريد إفراغ كل البيانات الحالية؟';if(confirm(msg))location.reload()}
+function initApp(){
+  /* Detect embedded mode via URL param */
+  const urlParams=new URLSearchParams(window.location.search);
+  const embedMode=urlParams.get('embed')==='1';
+  if(embedMode)document.body.classList.add('embedded');
+  /* Detect initial language from URL param or localStorage */
+  const urlLang=urlParams.get('lang');
+  const savedLang=urlLang||localStorage.getItem('financial_tool_lang')||'ar';
+  const sel=document.getElementById('languageSelect');if(sel)sel.value=savedLang;
+  currentLang=savedLang;
+  initTabs();initAssetSelector();initCustomAsset();addProduct();
+  document.addEventListener('input',()=>calculateAll());
+  document.addEventListener('change',e=>{if(e.target&&e.target.name==='projectType')suggestAssetsByProjectType();calculateAll()});
+  applyLanguage();
+  /* Listen for postMessage from parent (platform) to change language */
+  window.addEventListener('message',function(e){
+    if(e.data&&e.data.type==='setLanguage'){
+      setLanguage(e.data.lang||'ar');
+    }
+  });
+}initApp();
 </script>
 </body>
 </html>
