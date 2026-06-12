@@ -159,7 +159,8 @@ function LandingPage({ locale, onNavigate }: { locale: Locale; onNavigate: (v: A
   const { editableStats, adminSettings } = useAppStore();
   const dir = localeDirection[locale];
   const [heroImgIdx, setHeroImgIdx] = useState(0);
-  const heroImages = adminSettings.heroImages.length > 0 ? adminSettings.heroImages : ['/images/hero-bg.png', '/images/cta-bg.png', '/images/about-section.png'];
+  const defaultHeroImages = ['/images/hero-bg.png', '/images/cta-bg.png', '/images/about-section.png'];
+  const heroImages = (adminSettings.heroImages && adminSettings.heroImages.length > 0 && adminSettings.heroImages.every(p => typeof p === 'string' && p.startsWith('/'))) ? adminSettings.heroImages : defaultHeroImages;
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -167,6 +168,12 @@ function LandingPage({ locale, onNavigate }: { locale: Locale; onNavigate: (v: A
     }, 5000);
     return () => clearInterval(interval);
   }, [heroImages.length]);
+
+  // Image error handler - fallback to gradient if image fails to load
+  const handleImgError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const target = e.currentTarget;
+    target.style.display = 'none';
+  };
 
   const [typedText, setTypedText] = useState('');
   const fullSubtitle = t(locale, 'hero.subtitle');
@@ -192,7 +199,7 @@ function LandingPage({ locale, onNavigate }: { locale: Locale; onNavigate: (v: A
         
         <AnimatePresence mode="wait">
           <motion.div key={heroImgIdx} initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 0.15, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 1.5 }} className="absolute inset-0">
-            <img src={heroImages[heroImgIdx]} alt="" className="w-full h-full object-cover" />
+            <img src={heroImages[heroImgIdx]} alt="" className="w-full h-full object-cover" onError={handleImgError} />
           </motion.div>
         </AnimatePresence>
         
@@ -290,7 +297,7 @@ function LandingPage({ locale, onNavigate }: { locale: Locale; onNavigate: (v: A
               return (
                 <motion.div key={s} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} viewport={{ once: true }} whileHover={{ y: -8, rotateX: 2 }} className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all border border-slate-100 group">
                   <div className="h-40 overflow-hidden relative">
-                    <motion.img src={images[i]} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                    <motion.img src={images[i]} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" onError={handleImgError} />
                     <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent" />
                   </div>
                   <div className="p-6">
@@ -316,7 +323,7 @@ function LandingPage({ locale, onNavigate }: { locale: Locale; onNavigate: (v: A
               <div className="mt-6 space-y-2">{[{ icon: Users, text: t(locale, 'about.director') }, { icon: Building2, text: t(locale, 'about.established') }, { icon: Award, text: t(locale, 'about.official') }].map((item, i) => (<div key={i} className="flex items-center gap-3 text-slate-700"><item.icon className="w-5 h-5 text-[#C8A951]" /><span className="font-medium">{item.text}</span></div>))}</div>
             </motion.div>
             <motion.div initial={{ opacity: 0, x: locale === 'ar' ? -30 : 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="relative rounded-3xl overflow-hidden shadow-2xl">
-              <img src="/images/about-incubator.png" alt="INC ALG 3 Incubator" className="w-full h-[400px] object-cover" />
+              <img src="/images/about-incubator.png" alt="INC ALG 3 Incubator" className="w-full h-[400px] object-cover" onError={handleImgError} />
               <div className="absolute inset-0 bg-gradient-to-t from-[#0D1B2A]/80 via-transparent to-transparent" />
               <div className="absolute bottom-0 p-8 text-white">
                 <div className="flex items-center gap-3 mb-4"><div className="w-12 h-12 rounded-xl bg-[#C8A951]/20 flex items-center justify-center"><Building2 className="w-6 h-6 text-[#C8A951]" /></div><h3 className="text-2xl font-black" style={{ fontFamily: 'var(--font-cairo)' }}>INC ALG 3</h3></div>
@@ -341,7 +348,7 @@ function LandingPage({ locale, onNavigate }: { locale: Locale; onNavigate: (v: A
       {/* CTA with background image */}
       <section className="py-20 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #0D1B2A 0%, #1B3A6B 50%, #0F2140 100%)' }}>
         <motion.div animate={{ scale: [1, 1.05, 1] }} transition={{ duration: 8, repeat: Infinity }} className="absolute inset-0 opacity-10">
-          <img src="/images/cta-bg.png" alt="" className="w-full h-full object-cover" />
+          <img src="/images/cta-bg.png" alt="" className="w-full h-full object-cover" onError={handleImgError} />
         </motion.div>
         <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center relative">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
