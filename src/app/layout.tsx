@@ -34,7 +34,6 @@ export const metadata: Metadata = {
   title: 'INC ALG 3 — منصة رقمنة حاضنة أعمال جامعة الجزائر 3',
   description: 'منصة رقمية متكاملة لرقمنة خدمات حاضنة الأعمال الجامعية — جامعة الجزائر 3 إبراهيم سلطان شيبوط',
   keywords: ['حاضنة أعمال', 'جامعة الجزائر 3', 'رقمنة', 'ريادة أعمال', 'INC ALG 3', 'IncuBADZ'],
-  icons: { icon: '/logo.svg' },
 };
 
 export default function RootLayout({
