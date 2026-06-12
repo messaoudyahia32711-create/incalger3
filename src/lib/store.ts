@@ -37,12 +37,21 @@ export interface EditableStats {
   successRate: number;
 }
 
+export interface StudentProfile {
+  name: string;
+  email: string;
+  phone: string;
+  faculty: string;
+  level: string;
+  password: string;
+}
+
 interface AppState {
   currentView: AppView;
   setCurrentView: (view: AppView) => void;
   previousView: AppView;
-  user: { id: string; email: string; name: string; role: string; faculty?: string; level?: string } | null;
-  setUser: (user: { id: string; email: string; name: string; role: string; faculty?: string; level?: string } | null) => void;
+  user: { id: string; email: string; name: string; role: string; faculty?: string; level?: string; phone?: string } | null;
+  setUser: (user: { id: string; email: string; name: string; role: string; faculty?: string; level?: string; phone?: string } | null) => void;
   locale: Locale;
   setLocale: (locale: Locale) => void;
   mobileMenuOpen: boolean;
@@ -64,6 +73,8 @@ interface AppState {
   setSidebarCollapsed: (collapsed: boolean) => void;
   studentGuideStep: number;
   setStudentGuideStep: (step: number) => void;
+  studentProfiles: Record<string, StudentProfile>;
+  setStudentProfile: (userId: string, profile: StudentProfile) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -120,15 +131,21 @@ export const useAppStore = create<AppState>()(
 
       studentGuideStep: 0,
       setStudentGuideStep: (step) => set({ studentGuideStep: step }),
+
+      studentProfiles: {},
+      setStudentProfile: (userId, profile) => set((state) => ({
+        studentProfiles: { ...state.studentProfiles, [userId]: profile },
+      })),
     }),
     {
       name: 'inc-alg-3-store',
       partialize: (state) => ({
         locale: state.locale,
-        user: state.locale,
+        user: state.user,
         messages: state.messages,
         bmcData: state.bmcData,
         editableStats: state.editableStats,
+        studentProfiles: state.studentProfiles,
       }),
     }
   )

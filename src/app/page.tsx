@@ -676,20 +676,79 @@ function MessagingPanel({ locale, userId, userRole, otherPartyName }: { locale: 
 // ==================== STUDENT DASHBOARD ====================
 
 function StudentDashboard({ locale, user, onNavigate }: { locale: Locale; user: any; onNavigate: (v: AppView) => void }) {
-  const { studentTab, setStudentTab, sidebarCollapsed, setSidebarCollapsed, editableStats } = useAppStore();
+  const { studentTab, setStudentTab, sidebarCollapsed, setSidebarCollapsed, editableStats, studentProfiles, setStudentProfile, setUser, messages } = useAppStore();
   const dir = localeDirection[locale];
 
   const myProject = MOCK_PROJECTS.find(p => p.ownerEmail === user?.email) || MOCK_PROJECTS[0];
   const statusStepMap: Record<string, number> = { review: 0, committee: 1, accepted: 2, revision: 1, incubated: 4, rejected: -1 };
   const currentStep = statusStepMap[myProject.status] ?? 0;
 
+  const progressPercent = myProject.status === 'rejected' ? 0 : Math.round(((currentStep + 1) / 5) * 100);
+
+  // Settings state
+  const [editName, setEditName] = useState(user?.name || '');
+  const [editEmail, setEditEmail] = useState(user?.email || '');
+  const [editPhone, setEditPhone] = useState('');
+  const [editFaculty, setEditFaculty] = useState(user?.faculty || '');
+  const [editLevel, setEditLevel] = useState(user?.level || '');
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+  // Load saved profile on mount
+  useEffect(() => {
+    const saved = studentProfiles[user?.id || ''];
+    if (saved) {
+      setEditName(saved.name);
+      setEditEmail(saved.email);
+      setEditPhone(saved.phone);
+      setEditFaculty(saved.faculty);
+      setEditLevel(saved.level);
+    } else if (myProject) {
+      setEditPhone(myProject.ownerPhone || '');
+    }
+  }, [user?.id, studentProfiles, myProject]);
+
+  const handleSaveProfile = () => {
+    const profile = { name: editName, email: editEmail, phone: editPhone, faculty: editFaculty, level: editLevel, password: studentProfiles[user?.id || '']?.password || '' };
+    setStudentProfile(user?.id || '', profile);
+    setUser({ ...user, name: editName, email: editEmail, faculty: editFaculty, level: editLevel, phone: editPhone });
+    toast.success(t(locale, 'student.profileUpdated'));
+  };
+
+  const handleChangePassword = () => {
+    const savedProfile = studentProfiles[user?.id || ''];
+    const savedPassword = savedProfile?.password || (user?.id === 'student-001' ? 'student123' : '');
+    if (currentPassword !== savedPassword) {
+      toast.error(t(locale, 'student.incorrectPassword'));
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error(t(locale, 'student.passwordMismatch'));
+      return;
+    }
+    if (newPassword.length < 4) {
+      toast.error(locale === 'ar' ? 'كلمة المرور قصيرة جداً' : 'Password too short');
+      return;
+    }
+    const profile = { name: editName, email: editEmail, phone: editPhone, faculty: editFaculty, level: editLevel, password: newPassword };
+    setStudentProfile(user?.id || '', profile);
+    setCurrentPassword('');
+    setNewPassword('');
+    setConfirmPassword('');
+    toast.success(t(locale, 'student.passwordChanged'));
+  };
+
+  const unreadMsgs = messages.filter((m: Message) => m.to === user?.id && !m.read).length;
+
   const tabs = [
     { key: 'overview', label: t(locale, 'student.overview'), icon: HomeIcon },
     { key: 'my-project', label: t(locale, 'student.myProject'), icon: FileText },
     { key: 'bmc', label: t(locale, 'student.bmc'), icon: Target },
-    { key: 'messages', label: t(locale, 'student.messages'), icon: MessageCircle, badge: MOCK_MESSAGES.filter(m => m.to === 'student-001' && !m.read).length },
+    { key: 'messages', label: t(locale, 'student.messages'), icon: MessageCircle, badge: unreadMsgs },
     { key: 'guide', label: t(locale, 'student.guide'), icon: BookOpen },
     { key: 'profile', label: t(locale, 'student.profile'), icon: Users },
+    { key: 'settings', label: t(locale, 'student.settings'), icon: Settings },
   ];
 
   const stepIcons = [Lightbulb, ClipboardCheck, GraduationCap, Check, Rocket];
@@ -703,7 +762,8 @@ function StudentDashboard({ locale, user, onNavigate }: { locale: Locale; user: 
         <div className="bg-gradient-to-r from-[#1B3A6B] to-[#2952A3] py-5 px-6">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-xl bg-[#C8A951] flex items-center justify-center text-[#0D1B2A] font-black text-lg" style={{ fontFamily: 'var(--font-cairo)' }}>{user?.name?.charAt(0) || 'S'}</div>
-            <div><h1 className="text-xl font-black text-white" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'student.welcome')}، {user?.name}</h1><p className="text-[#E4C97A] text-xs">{user?.email}</p></div>
+            <div className="flex-1"><h1 className="text-xl font-black text-white" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'student.welcome')}، {user?.name}</h1><p className="text-[#E4C97A] text-xs">{user?.email}</p></div>
+            {myProject && <StatusBadge status={myProject.status} locale={locale} />}
           </div>
         </div>
 
@@ -714,46 +774,170 @@ function StudentDashboard({ locale, user, onNavigate }: { locale: Locale; user: 
 
         {/* Content */}
         <div className="flex-1 p-4 sm:p-6 overflow-y-auto">
+
+          {/* ========== OVERVIEW TAB ========== */}
           {studentTab === 'overview' && (
             <div className="space-y-6">
-              {/* Project Status Card */}
-              <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100">
-                <h3 className="text-lg font-bold text-[#1B3A6B] mb-4" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'student.projectStatus')}</h3>
-                <div className="flex items-center gap-3 mb-6">
-                  <StatusBadge status={myProject.status} locale={locale} />
-                  <span className="text-sm text-slate-500">{myProject.refNumber}</span>
-                  <span className="text-sm font-bold text-[#1B3A6B]">{locale === 'ar' ? myProject.projectName : myProject.projectNameEn}</span>
+              {/* Project Header Card */}
+              <div className="bg-white rounded-2xl overflow-hidden shadow-md border border-slate-100">
+                <div className="p-6" style={{ background: 'linear-gradient(135deg, #0D1B2A, #1B3A6B)' }}>
+                  <div className="flex flex-wrap items-center gap-2 mb-3">
+                    <FieldBadge field={myProject.field} locale={locale} />
+                    <StatusBadge status={myProject.status} locale={locale} />
+                    <span className="text-white/40 text-sm font-mono">{myProject.refNumber}</span>
+                  </div>
+                  <h2 className="text-2xl font-black text-white mb-1" style={{ fontFamily: 'var(--font-cairo)' }}>{locale === 'ar' ? myProject.projectName : myProject.projectNameEn}</h2>
+                  <p className="text-white/50 text-sm">{myProject.tradeName} • {t(locale, `stages.${myProject.stage}`)}</p>
                 </div>
-                {/* Step Progress */}
-                <div className="flex items-center gap-2 mb-6">
-                  {[0, 1, 2, 3, 4].map((step) => {
-                    const Icon = stepIcons[step];
-                    const isActive = step === currentStep;
-                    const isDone = step < currentStep;
-                    const isRejected = myProject.status === 'rejected';
-                    return (
-                      <div key={step} className="flex-1 flex flex-col items-center">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-1 transition-all ${isDone ? 'bg-[#27AE60] text-white' : isActive && !isRejected ? 'bg-[#C8A951] text-[#0D1B2A] animate-pulse-gold' : 'bg-slate-200 text-slate-400'}`}>
-                          {isDone ? <Check className="w-5 h-5" /> : <Icon className="w-4 h-4" />}
+
+                {/* Progress Bar */}
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-bold text-[#1B3A6B]">{t(locale, 'student.progressLabel')}</span>
+                    <span className="text-sm font-black text-[#C8A951]">{progressPercent}%</span>
+                  </div>
+                  <div className="h-3 bg-slate-100 rounded-full overflow-hidden mb-6">
+                    <motion.div initial={{ width: 0 }} animate={{ width: `${progressPercent}%` }} transition={{ duration: 1, ease: 'easeOut' }} className="h-full rounded-full" style={{ background: 'linear-gradient(90deg, #1B3A6B, #C8A951)' }} />
+                  </div>
+
+                  {/* Step Progress Icons */}
+                  <div className="flex items-center gap-2 mb-6">
+                    {[0, 1, 2, 3, 4].map((step) => {
+                      const Icon = stepIcons[step];
+                      const isActive = step === currentStep;
+                      const isDone = step < currentStep;
+                      const isRejected = myProject.status === 'rejected';
+                      return (
+                        <div key={step} className="flex-1 flex flex-col items-center">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-1 transition-all ${isDone ? 'bg-[#27AE60] text-white' : isActive && !isRejected ? 'bg-[#C8A951] text-[#0D1B2A] animate-pulse-gold' : 'bg-slate-200 text-slate-400'}`}>
+                            {isDone ? <Check className="w-5 h-5" /> : <Icon className="w-4 h-4" />}
+                          </div>
+                          <span className="text-[10px] text-center text-slate-500 font-medium">{t(locale, `student.stepGuide.step${step}.title`)}</span>
                         </div>
-                        <span className="text-[10px] text-center text-slate-500 font-medium">{t(locale, `student.stepGuide.step${step}.title`)}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-                {/* Current Step Guide */}
-                {currentStep >= 0 && (
-                  <div className="p-4 rounded-xl" style={{ backgroundColor: `${stepColors[currentStep]}08`, border: `1px solid ${stepColors[currentStep]}20` }}>
-                    <div className="flex items-start gap-3">
-                      <Info className="w-5 h-5 shrink-0 mt-0.5" style={{ color: stepColors[currentStep] }} />
-                      <div>
-                        <h4 className="font-bold text-sm mb-1" style={{ color: stepColors[currentStep] }}>{t(locale, `student.stepGuide.step${currentStep}.title`)}</h4>
-                        <p className="text-sm text-slate-600">{t(locale, `student.stepGuide.step${currentStep}.desc`)}</p>
+                      );
+                    })}
+                  </div>
+
+                  {/* Current Step Guide */}
+                  {currentStep >= 0 && (
+                    <div className="p-4 rounded-xl" style={{ backgroundColor: `${stepColors[currentStep]}08`, border: `1px solid ${stepColors[currentStep]}20` }}>
+                      <div className="flex items-start gap-3">
+                        <Info className="w-5 h-5 shrink-0 mt-0.5" style={{ color: stepColors[currentStep] }} />
+                        <div>
+                          <h4 className="font-bold text-sm mb-1" style={{ color: stepColors[currentStep] }}>{t(locale, `student.stepGuide.step${currentStep}.title`)}</h4>
+                          <p className="text-sm text-slate-600">{t(locale, `student.stepGuide.step${currentStep}.desc`)}</p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                  {myProject.status === 'rejected' && (
+                    <div className="p-4 rounded-xl bg-red-50 border border-red-200">
+                      <div className="flex items-start gap-3">
+                        <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+                        <div>
+                          <h4 className="font-bold text-sm text-red-700 mb-1">{t(locale, 'status.rejected')}</h4>
+                          <p className="text-sm text-red-600">{myProject.evaluationNotes || (locale === 'ar' ? 'يمكنك التواصل مع الإدارة لمزيد من المعلومات' : 'You can contact the admin for more information')}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
+
+              {/* Project Info & Financial Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Project Information */}
+                <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100">
+                  <h3 className="text-lg font-bold text-[#1B3A6B] mb-4 flex items-center gap-2" style={{ fontFamily: 'var(--font-cairo)' }}><FileText className="w-5 h-5" />{t(locale, 'student.projectInfo')}</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <span className="text-xs text-slate-400 font-bold">{t(locale, 'projectDetail.overview')}</span>
+                      <p className="text-sm text-slate-700 mt-1 leading-relaxed">{myProject.description}</p>
+                    </div>
+                    <div className="grid grid-cols-1 gap-3">
+                      {[
+                        { label: t(locale, 'projectSubmit.problem'), value: myProject.problem },
+                        { label: t(locale, 'projectSubmit.targetAudience'), value: myProject.targetAudience },
+                        { label: t(locale, 'projectSubmit.addedValue'), value: myProject.addedValue },
+                      ].map((item, i) => (
+                        <div key={i}>
+                          <span className="text-xs text-slate-400">{item.label}</span>
+                          <p className="text-sm text-slate-700 font-medium">{item.value}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Financial + Evaluation */}
+                <div className="space-y-6">
+                  <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100">
+                    <h3 className="text-lg font-bold text-[#1B3A6B] mb-4 flex items-center gap-2" style={{ fontFamily: 'var(--font-cairo)' }}><Banknote className="w-5 h-5" />{t(locale, 'student.financialInfo')}</h3>
+                    <div className="space-y-3">
+                      {[
+                        { label: t(locale, 'projectSubmit.fundingRequired'), value: `${myProject.fundingRequired.toLocaleString()} د.ج`, bold: true, color: '#1B3A6B' },
+                        { label: t(locale, 'projectSubmit.stage'), value: t(locale, `stages.${myProject.stage}`) },
+                        { label: t(locale, 'projectSubmit.hasPartner'), value: myProject.hasPartner ? (locale === 'ar' ? 'نعم' : 'Yes') : (locale === 'ar' ? 'لا' : 'No') },
+                        { label: t(locale, 'projectSubmit.teamSize'), value: String(myProject.teamSize) },
+                        { label: t(locale, 'projectSubmit.legalFramework'), value: myProject.legalFramework },
+                        { label: t(locale, 'projectSubmit.tradeName'), value: myProject.tradeName },
+                      ].map((item, i) => (
+                        <div key={i} className="flex justify-between items-center py-2 border-b border-slate-50 last:border-0">
+                          <span className="text-sm text-slate-500">{item.label}</span>
+                          <span className={`text-sm font-bold ${item.bold ? 'text-lg' : ''}`} style={{ color: item.color || '#1B3A6B' }}>{item.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100">
+                    <h3 className="text-lg font-bold text-[#1B3A6B] mb-4 flex items-center gap-2" style={{ fontFamily: 'var(--font-cairo)' }}><Award className="w-5 h-5" />{t(locale, 'student.evaluationInfo')}</h3>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-slate-500">{t(locale, 'student.scoreLabel')}</span>
+                        <span className={`text-2xl font-black ${myProject.score ? (myProject.score >= 80 ? 'text-green-600' : myProject.score >= 60 ? 'text-amber-600' : 'text-red-600') : 'text-slate-400'}`} style={{ fontFamily: 'var(--font-cairo)' }}>
+                          {myProject.score ? `${myProject.score}/100` : t(locale, 'projectDetail.noScore')}
+                        </span>
+                      </div>
+                      {myProject.score && (
+                        <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
+                          <motion.div initial={{ width: 0 }} animate={{ width: `${myProject.score}%` }} transition={{ duration: 0.8 }} className="h-full rounded-full" style={{ backgroundColor: myProject.score >= 80 ? '#27AE60' : myProject.score >= 60 ? '#F39C12' : '#E74C3C' }} />
+                        </div>
+                      )}
+                      {myProject.evaluationNotes && (
+                        <div className="mt-3 p-3 rounded-xl bg-[#C8A951]/5 border border-[#C8A951]/20">
+                          <p className="text-xs font-bold text-[#1B3A6B] mb-1">{t(locale, 'student.adminNotes')}</p>
+                          <p className="text-sm text-slate-600">{myProject.evaluationNotes}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Timeline */}
+              {myProject.timeline && myProject.timeline.length > 0 && (
+                <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100">
+                  <h3 className="text-lg font-bold text-[#1B3A6B] mb-4 flex items-center gap-2" style={{ fontFamily: 'var(--font-cairo)' }}><Clock className="w-5 h-5" />{t(locale, 'student.timelineInfo')}</h3>
+                  <div className="space-y-4">
+                    {myProject.timeline.map((event: any, i: number) => (
+                      <div key={i} className="flex items-start gap-4">
+                        <div className="flex flex-col items-center">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${i === myProject.timeline.length - 1 ? 'bg-[#C8A951] text-[#0D1B2A]' : 'bg-[#27AE60] text-white'}`}>
+                            {i === myProject.timeline.length - 1 ? <CircleDot className="w-4 h-4" /> : <Check className="w-4 h-4" />}
+                          </div>
+                          {i < myProject.timeline.length - 1 && <div className="w-0.5 h-8 bg-slate-200 mt-1" />}
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-[#1B3A6B]">{locale === 'ar' ? event.event : event.eventEn}</p>
+                          <p className="text-xs text-slate-400">{new Date(event.date).toLocaleDateString(locale === 'ar' ? 'ar-DZ' : locale === 'fr' ? 'fr-FR' : 'en', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Quick Stats */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 {[
@@ -772,6 +956,7 @@ function StudentDashboard({ locale, user, onNavigate }: { locale: Locale; user: 
             </div>
           )}
 
+          {/* ========== MY PROJECT TAB ========== */}
           {studentTab === 'my-project' && (
             <div className="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden">
               <div className="p-6" style={{ background: 'linear-gradient(135deg, #0D1B2A, #1B3A6B)' }}>
@@ -790,15 +975,55 @@ function StudentDashboard({ locale, user, onNavigate }: { locale: Locale; user: 
             </div>
           )}
 
-          {studentTab === 'bmc' && <BMCTool locale={locale} projectId={myProject.id} />}
+          {/* ========== BMC TAB — Full Tool Embed ========== */}
+          {studentTab === 'bmc' && (
+            <div className="space-y-4">
+              <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100">
+                <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+                  <div>
+                    <h2 className="text-2xl font-black text-[#1B3A6B]" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'bmc.title')}</h2>
+                    <p className="text-slate-500 text-sm mt-1">{t(locale, 'student.bmcToolDesc')}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <a href="/bmc-tool/index.html" target="_blank" rel="noopener noreferrer" className="px-4 py-2.5 rounded-xl bg-[#C8A951] text-[#0D1B2A] font-bold text-sm flex items-center gap-2 hover:bg-[#E4C97A] shadow-md transition-all">
+                      <ExternalLink className="w-4 h-4" />{t(locale, 'student.openBmcTool')}
+                    </a>
+                  </div>
+                </div>
+              </div>
 
-          {studentTab === 'messages' && (
-            <div className="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden">
-              <div className="p-4 border-b border-slate-200"><h3 className="font-bold text-[#1B3A6B]" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'student.messages')}</h3></div>
-              <MessagingPanel locale={locale} userId="student-001" userRole="student" otherPartyName={t(locale, 'student.adminTeam')} />
+              {/* BMC Canvas Quick Edit */}
+              <BMCTool locale={locale} projectId={myProject.id} />
+
+              {/* Full BMC Tool iframe */}
+              <div className="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden">
+                <div className="p-4 border-b border-slate-200 flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-[#1B3A6B] flex items-center justify-center"><Target className="w-4 h-4 text-[#C8A951]" /></div>
+                  <div>
+                    <h3 className="font-bold text-[#1B3A6B] text-sm" style={{ fontFamily: 'var(--font-cairo)' }}>{locale === 'ar' ? 'أداة الدراسة المالية الكاملة' : 'Full Financial Study Tool'}</h3>
+                    <p className="text-xs text-slate-400">{locale === 'ar' ? 'وفقاً للقرار الوزاري 1275' : 'Per Ministerial Decision 1275'}</p>
+                  </div>
+                </div>
+                <iframe
+                  src="/bmc-tool/index.html"
+                  className="w-full border-0"
+                  style={{ height: '900px' }}
+                  title="BMC Financial Tool"
+                  sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+                />
+              </div>
             </div>
           )}
 
+          {/* ========== MESSAGES TAB ========== */}
+          {studentTab === 'messages' && (
+            <div className="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden">
+              <div className="p-4 border-b border-slate-200"><h3 className="font-bold text-[#1B3A6B]" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'student.messages')}</h3></div>
+              <MessagingPanel locale={locale} userId={user?.id || 'student-001'} userRole="student" otherPartyName={t(locale, 'student.adminTeam')} />
+            </div>
+          )}
+
+          {/* ========== GUIDE TAB ========== */}
           {studentTab === 'guide' && (
             <div className="space-y-4">
               <h3 className="text-lg font-bold text-[#1B3A6B]" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'student.guide')}</h3>
@@ -827,13 +1052,112 @@ function StudentDashboard({ locale, user, onNavigate }: { locale: Locale; user: 
             </div>
           )}
 
+          {/* ========== PROFILE TAB ========== */}
           {studentTab === 'profile' && (
-            <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100 max-w-lg">
-              <h3 className="text-lg font-bold text-[#1B3A6B] mb-4" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'student.profile')}</h3>
-              <div className="space-y-4">
-                <div><label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'auth.name')}</label><input defaultValue={user?.name} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none" /></div>
-                <div><label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'auth.email')}</label><input defaultValue={user?.email} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none" /></div>
-                <button className="px-6 py-3 rounded-xl bg-[#1B3A6B] text-white font-bold hover:bg-[#2952A3] transition-all">{t(locale, 'common.save')}</button>
+            <div className="max-w-2xl space-y-6">
+              <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100">
+                <div className="flex items-center gap-4 mb-6 pb-6 border-b border-slate-100">
+                  <div className="w-16 h-16 rounded-2xl bg-[#1B3A6B] flex items-center justify-center text-[#C8A951] font-black text-2xl" style={{ fontFamily: 'var(--font-cairo)' }}>{editName?.charAt(0) || 'S'}</div>
+                  <div>
+                    <h3 className="text-lg font-bold text-[#1B3A6B]" style={{ fontFamily: 'var(--font-cairo)' }}>{editName}</h3>
+                    <p className="text-sm text-slate-500">{editEmail}</p>
+                    <StatusBadge status={myProject.status} locale={locale} />
+                  </div>
+                </div>
+
+                <h4 className="font-bold text-[#1B3A6B] mb-4 flex items-center gap-2" style={{ fontFamily: 'var(--font-cairo)' }}><Users className="w-4 h-4" />{t(locale, 'student.ownerInfo')}</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'auth.name')}</label>
+                    <input value={editName} onChange={(e) => setEditName(e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'student.phoneLabel')}</label>
+                    <input value={editPhone} onChange={(e) => setEditPhone(e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm" placeholder="05XXXXXXXX" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'auth.faculty')}</label>
+                    <select value={editFaculty} onChange={(e) => setEditFaculty(e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm bg-white">
+                      <option value="">{t(locale, 'auth.faculty')}</option>
+                      {(['eco', 'info', 'pol', 'sport'] as const).map((f) => (<option key={f} value={f}>{t(locale, `faculties.${f}`)}</option>))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'auth.level')}</label>
+                    <select value={editLevel} onChange={(e) => setEditLevel(e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm bg-white">
+                      <option value="">{t(locale, 'auth.level')}</option>
+                      {(['l1', 'l2', 'l3', 'm1', 'm2', 'phd'] as const).map((l) => (<option key={l} value={l}>{t(locale, `levels.${l}`)}</option>))}
+                    </select>
+                  </div>
+                </div>
+                <button onClick={handleSaveProfile} className="mt-6 px-6 py-3 rounded-xl bg-[#1B3A6B] text-white font-bold hover:bg-[#2952A3] transition-all flex items-center gap-2"><Check className="w-4 h-4" />{t(locale, 'common.save')}</button>
+              </div>
+            </div>
+          )}
+
+          {/* ========== SETTINGS TAB ========== */}
+          {studentTab === 'settings' && (
+            <div className="max-w-2xl space-y-6">
+              {/* Email Change */}
+              <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100">
+                <h3 className="text-lg font-bold text-[#1B3A6B] mb-4 flex items-center gap-2" style={{ fontFamily: 'var(--font-cairo)' }}><Mail className="w-5 h-5" />{t(locale, 'student.changeEmail')}</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'auth.email')}</label>
+                    <input type="email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm" />
+                  </div>
+                  <button onClick={handleSaveProfile} className="px-6 py-3 rounded-xl bg-[#1B3A6B] text-white font-bold hover:bg-[#2952A3] transition-all flex items-center gap-2"><Check className="w-4 h-4" />{t(locale, 'common.save')}</button>
+                </div>
+              </div>
+
+              {/* Password Change */}
+              <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100">
+                <h3 className="text-lg font-bold text-[#1B3A6B] mb-4 flex items-center gap-2" style={{ fontFamily: 'var(--font-cairo)' }}><Shield className="w-5 h-5" />{t(locale, 'student.changePassword')}</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'student.currentPassword')}</label>
+                    <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm" placeholder="••••••••" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'student.newPassword')}</label>
+                    <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm" placeholder="••••••••" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'student.confirmPassword')}</label>
+                    <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm" placeholder="••••••••" />
+                  </div>
+                  <button onClick={handleChangePassword} className="px-6 py-3 rounded-xl bg-[#2E7D32] text-white font-bold hover:bg-[#1B5E20] transition-all flex items-center gap-2"><Shield className="w-4 h-4" />{t(locale, 'student.changePassword')}</button>
+                </div>
+              </div>
+
+              {/* Profile Info Edit */}
+              <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100">
+                <h3 className="text-lg font-bold text-[#1B3A6B] mb-4 flex items-center gap-2" style={{ fontFamily: 'var(--font-cairo)' }}><Users className="w-5 h-5" />{t(locale, 'student.profile')}</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'auth.name')}</label>
+                    <input value={editName} onChange={(e) => setEditName(e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'student.phoneLabel')}</label>
+                    <input value={editPhone} onChange={(e) => setEditPhone(e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'auth.faculty')}</label>
+                    <select value={editFaculty} onChange={(e) => setEditFaculty(e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm bg-white">
+                      <option value="">{t(locale, 'auth.faculty')}</option>
+                      {(['eco', 'info', 'pol', 'sport'] as const).map((f) => (<option key={f} value={f}>{t(locale, `faculties.${f}`)}</option>))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'auth.level')}</label>
+                    <select value={editLevel} onChange={(e) => setEditLevel(e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm bg-white">
+                      <option value="">{t(locale, 'auth.level')}</option>
+                      {(['l1', 'l2', 'l3', 'm1', 'm2', 'phd'] as const).map((l) => (<option key={l} value={l}>{t(locale, `levels.${l}`)}</option>))}
+                    </select>
+                  </div>
+                </div>
+                <button onClick={handleSaveProfile} className="mt-6 px-6 py-3 rounded-xl bg-[#1B3A6B] text-white font-bold hover:bg-[#2952A3] transition-all flex items-center gap-2"><Check className="w-4 h-4" />{t(locale, 'common.save')}</button>
               </div>
             </div>
           )}
