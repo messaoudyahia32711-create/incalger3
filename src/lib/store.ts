@@ -115,6 +115,18 @@ export interface ProjectTimelineEvent {
   addedBy: string;
 }
 
+export interface AdminEvent {
+  id: string;
+  titleAr: string;
+  titleEn: string;
+  titleFr: string;
+  date: string;
+  location: string;
+  descAr: string;
+  descEn: string;
+  descFr: string;
+}
+
 interface AppState {
   currentView: AppView;
   setCurrentView: (view: AppView) => void;
@@ -155,6 +167,10 @@ interface AppState {
   addProjectTimelineEvent: (projectId: string, event: ProjectTimelineEvent) => void;
   projectStatusOverrides: Record<string, { status: string; score: number | null; evaluationNotes: string }>;
   setProjectStatusOverride: (projectId: string, data: { status: string; score: number | null; evaluationNotes: string }) => void;
+  adminEvents: AdminEvent[];
+  addAdminEvent: (event: AdminEvent) => void;
+  updateAdminEvent: (id: string, event: Partial<AdminEvent>) => void;
+  deleteAdminEvent: (id: string) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -258,6 +274,22 @@ export const useAppStore = create<AppState>()(
       setProjectStatusOverride: (projectId, data) => set((state) => ({
         projectStatusOverrides: { ...state.projectStatusOverrides, [projectId]: data },
       })),
+
+      adminEvents: [
+        { id: 'e1', titleAr: 'ملتقى المؤسسة الناشئة الإفريقية', titleEn: 'African Startup Conference', titleFr: 'Conférence Africaine des Startups', date: '2025-01-15', location: 'قصر الثقافة، الجزائر العاصمة', descAr: 'مشاركة 20 حامل مشروع من جامعة الجزائر 3', descEn: 'Participation of 20 project holders from University of Algiers 3', descFr: 'Participation de 20 porteurs de projets de l\'Université d\'Alger 3' },
+        { id: 'e2', titleAr: 'اليوم الوطني لريادة الأعمال', titleEn: 'National Entrepreneurship Day', titleFr: 'Journée Nationale de l\'Entrepreneuriat', date: '2025-03-21', location: 'مدرج جامعة الجزائر 3', descAr: 'يوم تحسيسي حول ريادة الأعمال', descEn: 'Awareness day about entrepreneurship', descFr: 'Journée de sensibilisation à l\'entrepreneuriat' },
+        { id: 'e3', titleAr: 'توقيع اتفاقية شراكة مع CERIST', titleEn: 'Partnership Agreement with CERIST', titleFr: 'Accord de partenariat avec le CERIST', date: '2025-02-05', location: 'رياسة جامعة الجزائر 3', descAr: 'شراكة لدعم التحول الرقمي', descEn: 'Partnership to support digital transformation', descFr: 'Partenariat pour soutenir la transformation numérique' },
+        { id: 'e4', titleAr: 'تكريم الدفعة 10', titleEn: 'Batch 10 Graduation', titleFr: 'Remise des diplômes - Promotion 10', date: '2025-06-20', location: 'مدرج جامعة الجزعة 3', descAr: 'حفل تكريم المشاريع المقبولة', descEn: 'Ceremony honoring accepted projects', descFr: 'Cérémonie de remise des diplômes des projets acceptés' },
+      ],
+      addAdminEvent: (event) => set((state) => ({
+        adminEvents: [...state.adminEvents, event],
+      })),
+      updateAdminEvent: (id, data) => set((state) => ({
+        adminEvents: state.adminEvents.map((e) => e.id === id ? { ...e, ...data } : e),
+      })),
+      deleteAdminEvent: (id) => set((state) => ({
+        adminEvents: state.adminEvents.filter((e) => e.id !== id),
+      })),
     }),
     {
       name: 'inc-alg-3-store',
@@ -273,6 +305,7 @@ export const useAppStore = create<AppState>()(
         adminSettings: state.adminSettings,
         projectTimelines: state.projectTimelines,
         projectStatusOverrides: state.projectStatusOverrides,
+        adminEvents: state.adminEvents,
       }),
     }
   )

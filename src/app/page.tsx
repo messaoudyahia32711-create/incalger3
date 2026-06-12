@@ -15,7 +15,7 @@ import {
   Clock, DollarSign, UsersRound, HandshakeIcon, Briefcase,
   CircleDot, CircleCheck, CircleAlert, CircleX, Circle, Bell
 } from 'lucide-react';
-import { useAppStore, type AppView, type Message, type BMCBlock, type EditableStats, type StudentProject } from '@/lib/store';
+import { useAppStore, type AppView, type Message, type BMCBlock, type EditableStats, type StudentProject, type AdminEvent } from '@/lib/store';
 import { t, type Locale, localeNames, localeDirection } from '@/lib/i18n';
 import { MOCK_PROJECTS, MOCK_PARTNERS, MOCK_EVENTS, MOCK_MESSAGES, ADMIN_CREDENTIALS, STUDENT_CREDENTIALS, DEFAULT_BMC } from '@/lib/mockData';
 import { toast } from 'sonner';
@@ -1537,7 +1537,7 @@ function StudentDashboard({ locale, user, onNavigate }: { locale: Locale; user: 
 // ==================== ADMIN DASHBOARD ====================
 
 function AdminDashboard({ locale }: { locale: Locale }) {
-  const { adminTab, setAdminTab, sidebarCollapsed, setSidebarCollapsed, editableStats, setEditableStats, messages, setSelectedProjectId, studentProjects, projectTimelines, addProjectTimelineEvent, projectStatusOverrides, setProjectStatusOverride, adminUsers, setAdminUser, adminSettings, setAdminSettings } = useAppStore();
+  const { adminTab, setAdminTab, sidebarCollapsed, setSidebarCollapsed, editableStats, setEditableStats, messages, setSelectedProjectId, studentProjects, projectTimelines, addProjectTimelineEvent, projectStatusOverrides, setProjectStatusOverride, adminUsers, setAdminUser, adminSettings, setAdminSettings, adminEvents, addAdminEvent, updateAdminEvent, deleteAdminEvent } = useAppStore();
   const [evalModal, setEvalModal] = useState<string | null>(null);
   const [evalScore, setEvalScore] = useState('');
   const [evalNotes, setEvalNotes] = useState('');
@@ -1555,6 +1555,11 @@ function AdminDashboard({ locale }: { locale: Locale }) {
   const [settingsPassword, setSettingsPassword] = useState('');
   const [settingsNewPassword, setSettingsNewPassword] = useState('');
   const [settingsConfirmPassword, setSettingsConfirmPassword] = useState('');
+  // Event modal state
+  const [eventModal, setEventModal] = useState<'add' | 'edit' | null>(null);
+  const [editingEventId, setEditingEventId] = useState<string | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [eventForm, setEventForm] = useState({ titleAr: '', titleEn: '', titleFr: '', date: '', location: '', descAr: '', descEn: '', descFr: '' });
   const dir = localeDirection[locale];
 
   // Build allProjects from mock + store
@@ -1956,7 +1961,268 @@ function AdminDashboard({ locale }: { locale: Locale }) {
           {adminTab === 'messages' && (<div className="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden"><div className="p-4 border-b border-slate-200"><h3 className="font-bold text-[#1B3A6B]" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'admin.messages')}</h3></div><MessagingPanel locale={locale} userId="admin-001" userRole="admin" otherPartyName={locale === 'ar' ? 'أحمد بن علي (طالب)' : 'Ahmed Ben Ali (Student)'} /></div>)}
 
           {/* Events */}
-          {adminTab === 'events' && (<div className="space-y-4"><div className="flex items-center justify-between"><h3 className="text-lg font-bold text-[#1B3A6B]" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'admin.events')}</h3><button className="px-4 py-2 rounded-xl bg-[#1B3A6B] text-white text-sm font-bold flex items-center gap-2"><Plus className="w-4 h-4" />{locale === 'ar' ? 'إضافة حدث' : 'Add Event'}</button></div>{MOCK_EVENTS.map((event) => (<div key={event.id} className="bg-white rounded-2xl p-5 shadow-md border border-slate-100"><div className="flex items-start justify-between"><div><h4 className="font-bold text-[#1B3A6B] mb-1" style={{ fontFamily: 'var(--font-cairo)' }}>{locale === 'ar' ? event.titleAr : event.titleEn}</h4><p className="text-sm text-slate-500">{event.location} • {new Date(event.date).toLocaleDateString()}</p></div><div className="flex gap-1"><button className="p-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-500"><Edit className="w-3.5 h-3.5" /></button><button className="p-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-500"><Trash2 className="w-3.5 h-3.5" /></button></div></div></div>))}</div>)}
+          {adminTab === 'events' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-bold text-[#1B3A6B]" style={{ fontFamily: 'var(--font-cairo)' }}>{t(locale, 'admin.events')}</h3>
+                <button
+                  onClick={() => {
+                    setEventForm({ titleAr: '', titleEn: '', titleFr: '', date: '', location: '', descAr: '', descEn: '', descFr: '' });
+                    setEditingEventId(null);
+                    setEventModal('add');
+                  }}
+                  className="px-4 py-2 rounded-xl bg-[#1B3A6B] text-white text-sm font-bold flex items-center gap-2 hover:bg-[#2952A3] transition-colors"
+                >
+                  <Plus className="w-4 h-4" />{t(locale, 'admin.addEvent')}
+                </button>
+              </div>
+
+              {adminEvents.length === 0 && (
+                <div className="bg-white rounded-2xl p-8 shadow-md border border-slate-100 text-center">
+                  <Activity className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                  <p className="text-slate-500">{t(locale, 'common.noData')}</p>
+                </div>
+              )}
+
+              {adminEvents.map((event) => (
+                <div key={event.id} className="bg-white rounded-2xl p-5 shadow-md border border-slate-100 hover:shadow-lg transition-shadow">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <h4 className="font-bold text-[#1B3A6B] mb-1" style={{ fontFamily: 'var(--font-cairo)' }}>
+                        {locale === 'ar' ? event.titleAr : locale === 'fr' ? event.titleFr : event.titleEn}
+                      </h4>
+                      <div className="flex items-center gap-3 text-sm text-slate-500 mb-2">
+                        <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" />{new Date(event.date).toLocaleDateString(locale === 'ar' ? 'ar-DZ' : locale === 'fr' ? 'fr-FR' : 'en-US')}</span>
+                        <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" />{event.location}</span>
+                      </div>
+                      {(locale === 'ar' ? event.descAr : locale === 'fr' ? event.descFr : event.descEn) && (
+                        <p className="text-sm text-slate-600">{locale === 'ar' ? event.descAr : locale === 'fr' ? event.descFr : event.descEn}</p>
+                      )}
+                    </div>
+                    <div className="flex gap-1 shrink-0 ml-3" style={locale === 'ar' ? { marginLeft: 0, marginRight: '0.75rem' } : {}}>
+                      <button
+                        onClick={() => {
+                          setEventForm({
+                            titleAr: event.titleAr, titleEn: event.titleEn, titleFr: event.titleFr,
+                            date: event.date, location: event.location,
+                            descAr: event.descAr, descEn: event.descEn, descFr: event.descFr,
+                          });
+                          setEditingEventId(event.id);
+                          setEventModal('edit');
+                        }}
+                        className="p-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 transition-colors"
+                        title={t(locale, 'admin.editEvent')}
+                      >
+                        <Edit className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => setDeleteConfirmId(event.id)}
+                        className="p-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-500 transition-colors"
+                        title={t(locale, 'admin.deleteEvent')}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Delete confirmation inline */}
+                  {deleteConfirmId === event.id && (
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="mt-3 pt-3 border-t border-slate-100">
+                      <p className="text-sm text-red-600 mb-2">{t(locale, 'admin.confirmDeleteEvent')}</p>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => {
+                            deleteAdminEvent(event.id);
+                            setDeleteConfirmId(null);
+                            toast.success(t(locale, 'admin.eventDeleted'));
+                          }}
+                          className="px-3 py-1.5 rounded-lg bg-red-500 text-white text-xs font-bold hover:bg-red-600 transition-colors"
+                        >{t(locale, 'admin.deleteEvent')}</button>
+                        <button
+                          onClick={() => setDeleteConfirmId(null)}
+                          className="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 text-xs font-bold hover:bg-slate-200 transition-colors"
+                        >{t(locale, 'admin.cancel')}</button>
+                      </div>
+                    </motion.div>
+                  )}
+                </div>
+              ))}
+
+              {/* Event Add/Edit Modal */}
+              <AnimatePresence>
+                {eventModal && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+                    onClick={(e) => { if (e.target === e.currentTarget) setEventModal(null); }}
+                  >
+                    <motion.div
+                      initial={{ scale: 0.9, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0.9, opacity: 0 }}
+                      className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="p-6">
+                        <div className="flex items-center justify-between mb-6">
+                          <h3 className="text-lg font-bold text-[#1B3A6B]" style={{ fontFamily: 'var(--font-cairo)' }}>
+                            {eventModal === 'add' ? t(locale, 'admin.addEvent') : t(locale, 'admin.editEvent')}
+                          </h3>
+                          <button onClick={() => setEventModal(null)} className="p-2 rounded-lg hover:bg-slate-100 text-slate-400 transition-colors">
+                            <X className="w-5 h-5" />
+                          </button>
+                        </div>
+
+                        <div className="space-y-4">
+                          {/* Arabic title */}
+                          <div>
+                            <label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'admin.eventTitleAr')}</label>
+                            <input
+                              value={eventForm.titleAr}
+                              onChange={(e) => setEventForm({ ...eventForm, titleAr: e.target.value })}
+                              className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm"
+                              dir="rtl"
+                              placeholder="عنوان الحدث بالعربية"
+                            />
+                          </div>
+                          {/* English title */}
+                          <div>
+                            <label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'admin.eventTitleEn')}</label>
+                            <input
+                              value={eventForm.titleEn}
+                              onChange={(e) => setEventForm({ ...eventForm, titleEn: e.target.value })}
+                              className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm"
+                              dir="ltr"
+                              placeholder="Event title in English"
+                            />
+                          </div>
+                          {/* French title */}
+                          <div>
+                            <label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'admin.eventTitleFr')}</label>
+                            <input
+                              value={eventForm.titleFr}
+                              onChange={(e) => setEventForm({ ...eventForm, titleFr: e.target.value })}
+                              className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm"
+                              dir="ltr"
+                              placeholder="Titre de l'événement en français"
+                            />
+                          </div>
+                          {/* Date & Location row */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'admin.eventDate')}</label>
+                              <input
+                                type="date"
+                                value={eventForm.date}
+                                onChange={(e) => setEventForm({ ...eventForm, date: e.target.value })}
+                                className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'admin.eventLocation')}</label>
+                              <input
+                                value={eventForm.location}
+                                onChange={(e) => setEventForm({ ...eventForm, location: e.target.value })}
+                                className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm"
+                                dir="rtl"
+                              />
+                            </div>
+                          </div>
+                          {/* Arabic description */}
+                          <div>
+                            <label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'admin.eventDescAr')}</label>
+                            <textarea
+                              value={eventForm.descAr}
+                              onChange={(e) => setEventForm({ ...eventForm, descAr: e.target.value })}
+                              className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm resize-none"
+                              rows={2}
+                              dir="rtl"
+                              placeholder="وصف الحدث بالعربية"
+                            />
+                          </div>
+                          {/* English description */}
+                          <div>
+                            <label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'admin.eventDescEn')}</label>
+                            <textarea
+                              value={eventForm.descEn}
+                              onChange={(e) => setEventForm({ ...eventForm, descEn: e.target.value })}
+                              className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm resize-none"
+                              rows={2}
+                              dir="ltr"
+                              placeholder="Event description in English"
+                            />
+                          </div>
+                          {/* French description */}
+                          <div>
+                            <label className="block text-sm font-bold text-slate-700 mb-1">{t(locale, 'admin.eventDescFr')}</label>
+                            <textarea
+                              value={eventForm.descFr}
+                              onChange={(e) => setEventForm({ ...eventForm, descFr: e.target.value })}
+                              className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#1B3A6B] outline-none text-sm resize-none"
+                              rows={2}
+                              dir="ltr"
+                              placeholder="Description de l'événement en français"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Modal actions */}
+                        <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-slate-100">
+                          <button
+                            onClick={() => setEventModal(null)}
+                            className="px-5 py-2.5 rounded-xl bg-slate-100 text-slate-600 font-bold text-sm hover:bg-slate-200 transition-colors"
+                          >{t(locale, 'admin.cancel')}</button>
+                          <button
+                            onClick={() => {
+                              if (!eventForm.titleAr && !eventForm.titleEn && !eventForm.titleFr) {
+                                toast.error(locale === 'ar' ? 'يرجى إدخال عنوان الحدث' : 'Please enter an event title');
+                                return;
+                              }
+                              if (eventModal === 'add') {
+                                const newEvent: AdminEvent = {
+                                  id: `e-${Date.now()}`,
+                                  titleAr: eventForm.titleAr,
+                                  titleEn: eventForm.titleEn || eventForm.titleAr,
+                                  titleFr: eventForm.titleFr || eventForm.titleAr,
+                                  date: eventForm.date || new Date().toISOString().split('T')[0],
+                                  location: eventForm.location,
+                                  descAr: eventForm.descAr,
+                                  descEn: eventForm.descEn,
+                                  descFr: eventForm.descFr,
+                                };
+                                addAdminEvent(newEvent);
+                                toast.success(t(locale, 'admin.eventAdded'));
+                              } else if (eventModal === 'edit' && editingEventId) {
+                                updateAdminEvent(editingEventId, {
+                                  titleAr: eventForm.titleAr,
+                                  titleEn: eventForm.titleEn,
+                                  titleFr: eventForm.titleFr,
+                                  date: eventForm.date,
+                                  location: eventForm.location,
+                                  descAr: eventForm.descAr,
+                                  descEn: eventForm.descEn,
+                                  descFr: eventForm.descFr,
+                                });
+                                toast.success(t(locale, 'admin.eventUpdated'));
+                              }
+                              setEventModal(null);
+                              setEditingEventId(null);
+                            }}
+                            className="px-5 py-2.5 rounded-xl bg-[#1B3A6B] text-white font-bold text-sm hover:bg-[#2952A3] flex items-center gap-2 transition-colors"
+                          >
+                            <Check className="w-4 h-4" />
+                            {eventModal === 'add' ? t(locale, 'admin.addEvent') : t(locale, 'admin.save')}
+                          </button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
 
           {/* Edit Stats */}
           {adminTab === 'stats' && (
